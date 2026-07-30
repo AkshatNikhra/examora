@@ -135,6 +135,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Something went wrong. Please try again.'**
   String get genericError;
+
+  /// Phone login headline
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with your phone'**
+  String get loginHeadline;
+
+  /// Phone login supporting text
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll send a one-time code to verify your number.'**
+  String get loginSubtitle;
+
+  /// Phone input label
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile number'**
+  String get phoneLabel;
+
+  /// Phone validation error
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid 10-digit Indian mobile number'**
+  String get phoneInvalid;
+
+  /// Send OTP button
+  ///
+  /// In en, this message translates to:
+  /// **'Send OTP'**
+  String get sendOtp;
+
+  /// OTP screen app bar
+  ///
+  /// In en, this message translates to:
+  /// **'Verify OTP'**
+  String get otpTitle;
+
+  /// OTP screen headline
+  ///
+  /// In en, this message translates to:
+  /// **'Enter verification code'**
+  String get otpHeadline;
+
+  /// OTP screen subtitle with phone
+  ///
+  /// In en, this message translates to:
+  /// **'Code sent to {phone}'**
+  String otpSubtitle(String phone);
+
+  /// OTP input label
+  ///
+  /// In en, this message translates to:
+  /// **'6-digit OTP'**
+  String get otpLabel;
+
+  /// OTP validation error
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 6-digit code'**
+  String get otpInvalid;
+
+  /// Verify OTP button
+  ///
+  /// In en, this message translates to:
+  /// **'Verify & continue'**
+  String get verifyOtp;
+
+  /// Logout button
+  ///
+  /// In en, this message translates to:
+  /// **'Log out'**
+  String get logout;
+
+  /// Shown when authenticated /me succeeds
+  ///
+  /// In en, this message translates to:
+  /// **'Auth OK — /me: {phone}'**
+  String meStatusOk(String phone);
+
+  /// Shown when authenticated /me fails
+  ///
+  /// In en, this message translates to:
+  /// **'Auth /me failed'**
+  String get meStatusFail;
+
+  /// Shown while /me is loading
+  ///
+  /// In en, this message translates to:
+  /// **'Checking /me…'**
+  String get meStatusLoading;
 }
 
 class _AppLocalizationsDelegate

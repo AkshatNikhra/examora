@@ -27,5 +27,75 @@
   "genericError": "Something went wrong. Please try again.",
   "@genericError": {
     "description": "Generic error message"
+  },
+  "loginHeadline": "Sign in with your phone",
+  "@loginHeadline": {
+    "description": "Phone login headline"
+  },
+  "loginSubtitle": "We'll send a one-time code to verify your number.",
+  "@loginSubtitle": {
+    "description": "Phone login supporting text"
+  },
+  "phoneLabel": "Mobile number",
+  "@phoneLabel": {
+    "description": "Phone input label"
+  },
+  "phoneInvalid": "Enter a valid 10-digit Indian mobile number",
+  "@phoneInvalid": {
+    "description": "Phone validation error"
+  },
+  "sendOtp": "Send OTP",
+  "@sendOtp": {
+    "description": "Send OTP button"
+  },
+  "otpTitle": "Verify OTP",
+  "@otpTitle": {
+    "description": "OTP screen app bar"
+  },
+  "otpHeadline": "Enter verification code",
+  "@otpHeadline": {
+    "description": "OTP screen headline"
+  },
+  "otpSubtitle": "Code sent to {phone}",
+  "@otpSubtitle": {
+    "description": "OTP screen subtitle with phone",
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "otpLabel": "6-digit OTP",
+  "@otpLabel": {
+    "description": "OTP input label"
+  },
+  "otpInvalid": "Enter the 6-digit code",
+  "@otpInvalid": {
+    "description": "OTP validation error"
+  },
+  "verifyOtp": "Verify & continue",
+  "@verifyOtp": {
+    "description": "Verify OTP button"
+  },
+  "logout": "Log out",
+  "@logout": {
+    "description": "Logout button"
+  },
+  "meStatusOk": "Auth OK — /me: {phone}",
+  "@meStatusOk": {
+    "description": "Shown when authenticated /me succeeds",
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "meStatusFail": "Auth /me failed",
+  "@meStatusFail": {
+    "description": "Shown when authenticated /me fails"
+  },
+  "meStatusLoading": "Checking /me…",
+  "@meStatusLoading": {
+    "description": "Shown while /me is loading"
   }
 }

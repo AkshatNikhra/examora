@@ -2,13 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/errors/app_failure.dart';
+import '../../../features/auth/presentation/auth_providers.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../repositories/health_repository.dart';
+import '../../../repositories/me_repository.dart';
 
 final healthCheckProvider = FutureProvider.autoDispose<Map<String, dynamic>>((
   ref,
 ) {
   return ref.watch(healthRepositoryProvider).check();
+});
+
+/// Phase 1 test: calls authenticated GET /me with Firebase ID token.
+final meCheckProvider = FutureProvider.autoDispose<Map<String, dynamic>>((
+  ref,
+) {
+  return ref.watch(meRepositoryProvider).fetchMe();
 });
 
 class HomeScreen extends ConsumerWidget {
@@ -18,10 +27,23 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final health = ref.watch(healthCheckProvider);
+    final me = ref.watch(meCheckProvider);
+    final authUser = ref.watch(authStateProvider).valueOrNull;
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.appTitle)),
+      appBar: AppBar(
+        title: Text(l10n.appTitle),
+        actions: [
+          IconButton(
+            tooltip: l10n.logout,
+            onPressed: () async {
+              await ref.read(authRepositoryProvider).signOut();
+            },
+            icon: const Icon(Icons.logout),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -41,6 +63,15 @@ class HomeScreen extends ConsumerWidget {
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
+              if (authUser?.phoneNumber != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  authUser!.phoneNumber!,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ],
               const SizedBox(height: 24),
               health.when(
                 data: (_) => _StatusChip(
@@ -55,12 +86,30 @@ class HomeScreen extends ConsumerWidget {
                   color: theme.colorScheme.error,
                 ),
               ),
+              const SizedBox(height: 12),
+              me.when(
+                data: (data) => _StatusChip(
+                  label: l10n.meStatusOk(
+                    data['phone']?.toString() ?? authUser?.phoneNumber ?? '—',
+                  ),
+                  color: theme.colorScheme.primary,
+                ),
+                loading: () => _StatusChip(
+                  label: l10n.meStatusLoading,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                error: (error, _) => _StatusChip(
+                  label: error is AppFailure
+                      ? '${l10n.meStatusFail}: ${error.message}'
+                      : l10n.meStatusFail,
+                  color: theme.colorScheme.error,
+                ),
+              ),
               const Spacer(),
               FilledButton(
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(l10n.homeCta)),
-                  );
+                  ref.invalidate(healthCheckProvider);
+                  ref.invalidate(meCheckProvider);
                 },
                 child: Text(l10n.homeCta),
               ),

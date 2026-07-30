@@ -21,6 +21,10 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS: str = "*"
 
+    FIREBASE_PROJECT_ID: str = "examora-de022"
+    # Path to Firebase service account JSON (Project settings → Service accounts)
+    FIREBASE_CREDENTIALS_PATH: str = "firebase-service-account.json"
+
     @property
     def cors_origins_list(self) -> list[str]:
         if self.CORS_ORIGINS.strip() == "*":

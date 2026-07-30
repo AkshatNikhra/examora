@@ -1,24 +1,24 @@
-import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
 
-import 'package:examora/features/home/presentation/home_screen.dart';
-import 'package:examora/main.dart';
+import 'package:examora/features/auth/presentation/phone_login_screen.dart';
+import 'package:examora/l10n/app_localizations.dart';
 
 void main() {
-  testWidgets('home screen shows Examora title', (tester) async {
+  testWidgets('phone login screen shows sign-in headline', (tester) async {
     await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          healthCheckProvider.overrideWith(
-            (ref) async => {'status': 'ok'},
-          ),
-        ],
-        child: const ExamoraApp(),
+      const ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: PhoneLoginScreen(),
+        ),
       ),
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Examora'), findsOneWidget);
-    expect(find.textContaining('Turn your notes'), findsOneWidget);
+    expect(find.text('Sign in with your phone'), findsOneWidget);
+    expect(find.text('Send OTP'), findsOneWidget);
   });
 }

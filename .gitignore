@@ -16,6 +16,8 @@ secrets/
 google-services.json
 GoogleService-Info.plist
 **/firebase_options.dart
+**/firebase-service-account.json
+backend/firebase-service-account.json
 
 # OS / editors
 .DS_Store

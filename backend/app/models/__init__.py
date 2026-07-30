@@ -1,1 +1,22 @@
-"""Empty models package — domain tables arrive in Phase 1+."""
+"""SQLAlchemy domain models."""
+
+from datetime import datetime
+
+from sqlalchemy import DateTime, String, func
+from sqlalchemy.orm import Mapped, mapped_column
+
+from app.core.database import Base
+
+
+class User(Base):
+    """App user keyed by Firebase Auth UID."""
+
+    __tablename__ = "users"
+
+    id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    phone: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
