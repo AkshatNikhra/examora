@@ -1,0 +1,63 @@
+# Spec / private docs
+PROJECT_SPEC.md
+*.secret.md
+
+# Environment & secrets (keep *.example tracked)
+.env
+.env.*
+!.env.example
+!**/.env.example
+backend/.env
+**/*.pem
+**/*.p12
+**/*.jks
+**/*.keystore
+secrets/
+google-services.json
+GoogleService-Info.plist
+**/firebase_options.dart
+
+# OS / editors
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/
+*.iml
+.cursor/
+*.swp
+*~
+
+# Python / backend
+.venv/
+backend/.venv/
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/.coverage
+**/htmlcov/
+**/*.egg-info/
+backend/dist/
+backend/build/
+
+# Flutter / mobile
+mobile/.dart_tool/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.packages
+mobile/.pub-cache/
+mobile/.pub/
+mobile/build/
+mobile/.idea/
+mobile/**/*.iml
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/key.properties
+mobile/android/app/upload-keystore.jks
+mobile/ios/Pods/
+mobile/ios/.symlinks/
+mobile/coverage/
+mobile/**/Generated.xcconfig
+mobile/**/flutter_export_environment.sh

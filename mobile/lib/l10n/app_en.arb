@@ -1,0 +1,31 @@
+{
+  "@@locale": "en",
+  "appTitle": "Examora",
+  "@appTitle": {
+    "description": "Application title"
+  },
+  "homeHeadline": "Turn your notes into practice papers",
+  "@homeHeadline": {
+    "description": "Home screen headline"
+  },
+  "homeSubtitle": "Upload study notes and generate MCQ question papers with AI.",
+  "@homeSubtitle": {
+    "description": "Home screen supporting text"
+  },
+  "homeCta": "Get started",
+  "@homeCta": {
+    "description": "Primary home CTA (placeholder for later upload flow)"
+  },
+  "backendStatusOk": "Backend connected",
+  "@backendStatusOk": {
+    "description": "Shown when /health succeeds"
+  },
+  "backendStatusFail": "Backend unreachable",
+  "@backendStatusFail": {
+    "description": "Shown when /health fails"
+  },
+  "genericError": "Something went wrong. Please try again.",
+  "@genericError": {
+    "description": "Generic error message"
+  }
+}
