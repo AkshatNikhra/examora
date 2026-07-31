@@ -79,4 +79,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get meStatusLoading => 'Checking /me…';
+
+  @override
+  String get notesTitle => 'My notes';
+
+  @override
+  String get notesEmpty => 'No notes yet. Upload a PDF to get started.';
+
+  @override
+  String get notesUploadCta => 'Upload PDF';
+
+  @override
+  String get notesUploading => 'Uploading PDF…';
+
+  @override
+  String get notesUploadSuccess => 'Note uploaded successfully';
+
+  @override
+  String get notesUploadFailed => 'Upload failed';
+
+  @override
+  String get notesPickFailed => 'Could not read the selected file';
 }

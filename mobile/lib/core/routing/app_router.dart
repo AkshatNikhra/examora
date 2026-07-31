@@ -7,6 +7,7 @@ import '../../features/auth/presentation/auth_providers.dart';
 import '../../features/auth/presentation/otp_screen.dart';
 import '../../features/auth/presentation/phone_login_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
+import '../../features/notes/presentation/notes_list_screen.dart';
 import 'go_router_refresh.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -51,6 +52,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/',
         name: 'home',
         builder: (context, state) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: '/notes',
+        name: 'notes',
+        builder: (context, state) => const NotesListScreen(),
       ),
     ],
   );

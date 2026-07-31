@@ -11,3 +11,15 @@ class UserResponse(BaseModel):
     id: str
     phone: str
     created_at: datetime
+
+
+class NoteResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    user_id: str
+    title: str
+    file_url: str
+    language: str
+    status: str
+    created_at: datetime

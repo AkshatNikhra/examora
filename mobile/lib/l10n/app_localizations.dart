@@ -225,6 +225,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Checking /me…'**
   String get meStatusLoading;
+
+  /// Notes list screen title
+  ///
+  /// In en, this message translates to:
+  /// **'My notes'**
+  String get notesTitle;
+
+  /// Empty notes list message
+  ///
+  /// In en, this message translates to:
+  /// **'No notes yet. Upload a PDF to get started.'**
+  String get notesEmpty;
+
+  /// Upload FAB label
+  ///
+  /// In en, this message translates to:
+  /// **'Upload PDF'**
+  String get notesUploadCta;
+
+  /// Upload in progress label
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading PDF…'**
+  String get notesUploading;
+
+  /// Upload success snackbar
+  ///
+  /// In en, this message translates to:
+  /// **'Note uploaded successfully'**
+  String get notesUploadSuccess;
+
+  /// Upload failure snackbar prefix
+  ///
+  /// In en, this message translates to:
+  /// **'Upload failed'**
+  String get notesUploadFailed;
+
+  /// File picker path missing
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read the selected file'**
+  String get notesPickFailed;
 }
 
 class _AppLocalizationsDelegate

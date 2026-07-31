@@ -97,5 +97,33 @@
   "meStatusLoading": "Checking /me…",
   "@meStatusLoading": {
     "description": "Shown while /me is loading"
+  },
+  "notesTitle": "My notes",
+  "@notesTitle": {
+    "description": "Notes list screen title"
+  },
+  "notesEmpty": "No notes yet. Upload a PDF to get started.",
+  "@notesEmpty": {
+    "description": "Empty notes list message"
+  },
+  "notesUploadCta": "Upload PDF",
+  "@notesUploadCta": {
+    "description": "Upload FAB label"
+  },
+  "notesUploading": "Uploading PDF…",
+  "@notesUploading": {
+    "description": "Upload in progress label"
+  },
+  "notesUploadSuccess": "Note uploaded successfully",
+  "@notesUploadSuccess": {
+    "description": "Upload success snackbar"
+  },
+  "notesUploadFailed": "Upload failed",
+  "@notesUploadFailed": {
+    "description": "Upload failure snackbar prefix"
+  },
+  "notesPickFailed": "Could not read the selected file",
+  "@notesPickFailed": {
+    "description": "File picker path missing"
   }
 }

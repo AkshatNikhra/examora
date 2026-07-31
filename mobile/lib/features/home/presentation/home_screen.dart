@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/errors/app_failure.dart';
 import '../../../features/auth/presentation/auth_providers.dart';
@@ -107,10 +108,7 @@ class HomeScreen extends ConsumerWidget {
               ),
               const Spacer(),
               FilledButton(
-                onPressed: () {
-                  ref.invalidate(healthCheckProvider);
-                  ref.invalidate(meCheckProvider);
-                },
+                onPressed: () => context.push('/notes'),
                 child: Text(l10n.homeCta),
               ),
             ],
