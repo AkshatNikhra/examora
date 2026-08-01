@@ -106,7 +106,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notesStatusUploaded => 'Saved (not processed yet)';
 
   @override
-  String get notesStatusProcessing => 'Processing…';
+  String get notesStatusProcessing => 'Processing notes…';
 
   @override
   String get notesStatusReady => 'Ready';

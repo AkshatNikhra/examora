@@ -274,10 +274,10 @@ abstract class AppLocalizations {
   /// **'Saved (not processed yet)'**
   String get notesStatusUploaded;
 
-  /// Note status: processing
+  /// Note status: processing (extract/OCR + AI)
   ///
   /// In en, this message translates to:
-  /// **'Processing…'**
+  /// **'Processing notes…'**
   String get notesStatusProcessing;
 
   /// Note status: ready

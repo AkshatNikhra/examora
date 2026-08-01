@@ -8,6 +8,7 @@ os.environ["FIREBASE_PROJECT_ID"] = "test-project"
 os.environ["FIREBASE_CREDENTIALS_PATH"] = "missing-credentials.json"
 os.environ["NOTE_AUTO_PROCESS"] = "false"
 os.environ["NOTE_AI_PROVIDER"] = "local"
+os.environ["OCR_PROVIDER"] = "none"
 
 import pytest
 from fastapi.testclient import TestClient

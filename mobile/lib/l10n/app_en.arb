@@ -130,9 +130,9 @@
   "@notesStatusUploaded": {
     "description": "Note status: uploaded, waiting for paper creation"
   },
-  "notesStatusProcessing": "Processing…",
+  "notesStatusProcessing": "Processing notes…",
   "@notesStatusProcessing": {
-    "description": "Note status: processing"
+    "description": "Note status: processing (extract/OCR + AI)"
   },
   "notesStatusReady": "Ready",
   "@notesStatusReady": {

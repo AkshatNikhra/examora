@@ -46,6 +46,12 @@ class Settings(BaseSettings):
     OPENAI_MODEL: str = "gpt-4o-mini"
     OPENAI_BASE_URL: str = "https://api.openai.com/v1"
 
+    # Phase 3b — OCR when local PDF text is missing/weak
+    GCP_VISION_CREDENTIALS_PATH: str = "gcp-vision-service-account.json"
+    OCR_PROVIDER: str = "google_vision"  # google_vision | none
+    OCR_MIN_TEXT_CHARS: int = 100
+    OCR_MAX_PAGES: int = 20
+
     @property
     def cors_origins_list(self) -> list[str]:
         if self.CORS_ORIGINS.strip() == "*":

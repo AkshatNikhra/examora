@@ -18,6 +18,8 @@ GoogleService-Info.plist
 **/firebase_options.dart
 **/firebase-service-account.json
 backend/firebase-service-account.json
+**/gcp-vision-service-account.json
+backend/gcp-vision-service-account.json
 
 # OS / editors
 .DS_Store
