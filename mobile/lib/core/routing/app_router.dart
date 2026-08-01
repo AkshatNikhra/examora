@@ -49,13 +49,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final bool onOnboarding = location.startsWith('/onboarding');
 
       if (!loggedIn && !onAuthRoute) {
-        return '/signup';
+        return '/signin';
       }
       if (loggedIn && onAuthRoute) {
         return '/';
       }
       if (!loggedIn && onOnboarding) {
-        return '/signup';
+        return '/signin';
       }
       return null;
     },
@@ -85,7 +85,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final args = state.extra;
           if (args is! OtpRouteArgs) {
-            return const SignUpScreen();
+            return const SignInScreen();
           }
           return OtpScreen(args: args);
         },

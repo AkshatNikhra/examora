@@ -1,6 +1,6 @@
 """Authenticated user profile, onboarding, and home summary."""
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -15,6 +15,7 @@ from app.schemas import (
     HomeSummaryResponse,
     OnboardingExamsRequest,
     OnboardingProfileRequest,
+    PhoneAccountStatusResponse,
     UserPreferenceUpdate,
     UserResponse,
 )
@@ -26,6 +27,18 @@ router = APIRouter(tags=["users"])
 
 def _user_response(user: User) -> UserResponse:
     return UserResponse.from_user(user)
+
+
+@router.get("/auth/phone-status", response_model=PhoneAccountStatusResponse)
+def phone_account_status(
+    phone: str = Query(..., min_length=8, max_length=20),
+    db: Session = Depends(get_db),
+) -> PhoneAccountStatusResponse:
+    """Public: whether this phone has a completed Examora account (for sign-in)."""
+    normalized = phone.strip()
+    user = db.scalars(select(User).where(User.phone == normalized).limit(1)).first()
+    has_account = bool(user is not None and int(getattr(user, "onboarding_completed", 0) or 0) == 1)
+    return PhoneAccountStatusResponse(has_account=has_account)
 
 
 @router.get("/me", response_model=UserResponse)

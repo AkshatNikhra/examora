@@ -412,10 +412,10 @@ abstract class AppLocalizations {
   /// **'My practice papers'**
   String get homePapersCta;
 
-  /// Papers list app bar
+  /// Papers / tests list app bar
   ///
   /// In en, this message translates to:
-  /// **'Practice papers'**
+  /// **'My Tests'**
   String get papersListTitle;
 
   /// Empty papers list
@@ -547,7 +547,7 @@ abstract class AppLocalizations {
   /// Exams list app bar
   ///
   /// In en, this message translates to:
-  /// **'My exams'**
+  /// **'My Exams'**
   String get examsListTitle;
 
   /// Empty exams list

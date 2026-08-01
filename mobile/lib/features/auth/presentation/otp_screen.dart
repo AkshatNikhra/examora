@@ -70,6 +70,21 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   Future<void> _afterAuth() async {
     final me = await ref.read(meRepositoryProvider).fetchMe();
     if (!mounted) return;
+
+    // Sign-in requires a completed Examora account.
+    if (!widget.args.isSignUp && !me.onboardingCompleted) {
+      await ref.read(authRepositoryProvider).signOut();
+      if (!mounted) return;
+      setState(() {
+        _error =
+            'No account with this number. Try creating an account with it.';
+        _isLoading = false;
+      });
+      await Future<void>.delayed(const Duration(milliseconds: 1200));
+      if (mounted) context.go('/signup');
+      return;
+    }
+
     if (!me.onboardingCompleted) {
       if (me.fullName == null || me.fullName!.isEmpty) {
         context.go('/onboarding/profile');

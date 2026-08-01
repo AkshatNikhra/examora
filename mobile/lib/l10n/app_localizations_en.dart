@@ -184,7 +184,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homePapersCta => 'My practice papers';
 
   @override
-  String get papersListTitle => 'Practice papers';
+  String get papersListTitle => 'My Tests';
 
   @override
   String get papersListEmpty =>
@@ -259,7 +259,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeExamsCta => 'My exams';
 
   @override
-  String get examsListTitle => 'My exams';
+  String get examsListTitle => 'My Exams';
 
   @override
   String get examsListEmpty =>

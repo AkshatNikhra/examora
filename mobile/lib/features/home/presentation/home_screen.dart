@@ -116,7 +116,9 @@ class HomeScreen extends ConsumerWidget {
                       Expanded(
                         child: _StatCard(
                           icon: Icons.assignment_outlined,
-                          value: '${summary.testsTaken}',
+                          value: summary.testsTaken == 0
+                              ? '—'
+                              : '${summary.testsTaken}',
                           label: 'Tests Taken',
                         ),
                       ),
@@ -124,7 +126,8 @@ class HomeScreen extends ConsumerWidget {
                       Expanded(
                         child: _StatCard(
                           icon: Icons.auto_awesome,
-                          value: summary.avgScorePercent == null
+                          value: (summary.testsTaken == 0 ||
+                                  summary.avgScorePercent == null)
                               ? '—'
                               : '${summary.avgScorePercent}%',
                           label: 'Avg Score',

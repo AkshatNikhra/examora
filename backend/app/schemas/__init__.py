@@ -33,6 +33,10 @@ class UserPreferenceUpdate(BaseModel):
     preferred_paper_language: str = Field(..., pattern="^(en|hi)$")
 
 
+class PhoneAccountStatusResponse(BaseModel):
+    has_account: bool
+
+
 class OnboardingProfileRequest(BaseModel):
     full_name: str = Field(..., min_length=1, max_length=255)
     date_of_birth: str = Field(..., pattern=r"^\d{4}-\d{2}-\d{2}$")

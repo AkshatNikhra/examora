@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/errors/app_failure.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../repositories/exams_repository.dart';
 
@@ -59,7 +60,21 @@ class ExamsListScreen extends ConsumerWidget {
     final asyncExams = ref.watch(examsListProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.examsListTitle)),
+      backgroundColor: AppTheme.cream,
+      appBar: AppBar(
+        title: Text(
+          l10n.examsListTitle,
+          style: const TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        titleTextStyle: const TextStyle(
+          color: AppTheme.ink,
+          fontSize: 26,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _addExam(context, ref),
         icon: const Icon(Icons.add),
@@ -87,7 +102,7 @@ class ExamsListScreen extends ConsumerWidget {
                     Text(
                       l10n.examsListEmpty,
                       textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyLarge,
+                      style: theme.textTheme.bodyLarge?.copyWith(fontSize: 16),
                     ),
                     const SizedBox(height: 16),
                     FilledButton(
@@ -106,16 +121,39 @@ class ExamsListScreen extends ConsumerWidget {
               await ref.read(examsListProvider.future);
             },
             child: ListView.separated(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
               itemCount: exams.length,
-              separatorBuilder: (_, _) => const Divider(height: 1),
+              separatorBuilder: (_, _) => const SizedBox(height: 10),
               itemBuilder: (context, index) {
                 final exam = exams[index];
-                return ListTile(
-                  title: Text(exam.name),
-                  subtitle: Text(l10n.examsBatchCount(exam.batchCount)),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.push('/exams/${exam.id}'),
+                return Material(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    title: Text(
+                      exam.name,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        l10n.examsBatchCount(exam.batchCount),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: AppTheme.muted,
+                        ),
+                      ),
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push('/exams/${exam.id}'),
+                  ),
                 );
               },
             ),

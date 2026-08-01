@@ -4,8 +4,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/errors/app_failure.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../repositories/me_repository.dart';
 import 'auth_providers.dart';
 import 'otp_screen.dart';
 
@@ -21,6 +23,9 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   final _phoneController = TextEditingController();
   bool _isLoading = false;
   String? _error;
+
+  static const _noAccountMessage =
+      'No account with this number. Try creating an account with it.';
 
   @override
   void dispose() {
@@ -42,6 +47,17 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     final auth = ref.read(authRepositoryProvider);
     final l10n = AppLocalizations.of(context);
     try {
+      final hasAccount =
+          await ref.read(meRepositoryProvider).phoneHasAccount(_e164Phone);
+      if (!hasAccount) {
+        if (!mounted) return;
+        setState(() {
+          _error = _noAccountMessage;
+          _isLoading = false;
+        });
+        return;
+      }
+
       final verificationId = await auth.sendOtp(
         phoneNumber: _e164Phone,
         onAutoVerified: (PhoneAuthCredential credential) async {
@@ -59,6 +75,8 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       );
     } on FirebaseAuthException catch (error) {
       setState(() => _error = error.message ?? l10n.genericError);
+    } on AppFailure catch (error) {
+      setState(() => _error = error.message);
     } catch (_) {
       setState(() => _error = l10n.genericError);
     } finally {
@@ -70,24 +88,18 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.cream,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, size: 18),
-          onPressed: () => context.go('/signup'),
-        ),
-      ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Text(
-                  'Sign in with mobile',
+                  'Sign in',
                   style: TextStyle(
-                    fontSize: 28,
+                    fontSize: 32,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -155,7 +167,21 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                 const Spacer(),
                 TextButton(
                   onPressed: () => context.go('/signup'),
-                  child: const Text('New here? Create account'),
+                  child: const Text.rich(
+                    TextSpan(
+                      text: "Don't have an account? ",
+                      style: TextStyle(color: AppTheme.muted),
+                      children: [
+                        TextSpan(
+                          text: 'Create account',
+                          style: TextStyle(
+                            color: AppTheme.navy,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),

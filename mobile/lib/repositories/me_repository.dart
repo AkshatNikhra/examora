@@ -242,6 +242,39 @@ class MeRepository {
     }
   }
 
+  Future<UserProfile> updatePreferredLanguage(String language) async {
+    try {
+      final response = await _dio.patch<Map<String, dynamic>>(
+        '/me/preferences',
+        data: {'preferred_paper_language': language},
+      );
+      final data = response.data;
+      if (data == null) throw const ServerFailure('Empty preferences response');
+      return UserProfile.fromJson(data);
+    } on DioException catch (error) {
+      throw NetworkFailure(_dioMessage(error));
+    } catch (error) {
+      if (error is AppFailure) rethrow;
+      throw UnexpectedFailure(error.toString());
+    }
+  }
+
+  Future<bool> phoneHasAccount(String phone) async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        '/auth/phone-status',
+        queryParameters: {'phone': phone},
+      );
+      final data = response.data;
+      return data?['has_account'] as bool? ?? false;
+    } on DioException catch (error) {
+      throw NetworkFailure(_dioMessage(error));
+    } catch (error) {
+      if (error is AppFailure) rethrow;
+      throw UnexpectedFailure(error.toString());
+    }
+  }
+
   Future<HomeSummary> fetchHomeSummary() async {
     try {
       final response = await _dio.get<Map<String, dynamic>>('/me/summary');

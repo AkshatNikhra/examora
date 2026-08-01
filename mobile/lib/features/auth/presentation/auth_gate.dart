@@ -23,7 +23,7 @@ class AuthGate extends ConsumerWidget {
       data: (user) {
         if (user == null) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (context.mounted) context.go('/signup');
+            if (context.mounted) context.go('/signin');
           });
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),

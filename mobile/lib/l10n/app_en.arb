@@ -228,9 +228,9 @@
   "@homePapersCta": {
     "description": "Home button to open papers list"
   },
-  "papersListTitle": "Practice papers",
+  "papersListTitle": "My Tests",
   "@papersListTitle": {
-    "description": "Papers list app bar"
+    "description": "Papers / tests list app bar"
   },
   "papersListEmpty": "No papers yet. Open a Ready note and create a practice paper.",
   "@papersListEmpty": {
@@ -327,7 +327,7 @@
   "@homeExamsCta": {
     "description": "Home button to exams"
   },
-  "examsListTitle": "My exams",
+  "examsListTitle": "My Exams",
   "@examsListTitle": {
     "description": "Exams list app bar"
   },
