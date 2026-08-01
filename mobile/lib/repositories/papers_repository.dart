@@ -45,7 +45,8 @@ class PaperQuestionItem {
 class PaperSummary {
   PaperSummary({
     required this.id,
-    required this.noteId,
+    this.noteId,
+    this.batchFolderId,
     required this.title,
     required this.language,
     required this.status,
@@ -54,7 +55,8 @@ class PaperSummary {
   });
 
   final String id;
-  final String noteId;
+  final String? noteId;
+  final String? batchFolderId;
   final String title;
   final String language;
   final String status;
@@ -64,7 +66,8 @@ class PaperSummary {
   factory PaperSummary.fromJson(Map<String, dynamic> json) {
     return PaperSummary(
       id: json['id'] as String,
-      noteId: json['note_id'] as String,
+      noteId: json['note_id'] as String?,
+      batchFolderId: json['batch_folder_id'] as String?,
       title: json['title'] as String? ?? 'Practice paper',
       language: json['language'] as String? ?? 'en',
       status: json['status'] as String? ?? 'ready',
@@ -77,7 +80,8 @@ class PaperSummary {
 class PaperDetail {
   PaperDetail({
     required this.id,
-    required this.noteId,
+    this.noteId,
+    this.batchFolderId,
     required this.title,
     required this.language,
     required this.status,
@@ -87,7 +91,8 @@ class PaperDetail {
   });
 
   final String id;
-  final String noteId;
+  final String? noteId;
+  final String? batchFolderId;
   final String title;
   final String language;
   final String status;
@@ -102,7 +107,8 @@ class PaperDetail {
         .toList();
     return PaperDetail(
       id: json['id'] as String,
-      noteId: json['note_id'] as String,
+      noteId: json['note_id'] as String?,
+      batchFolderId: json['batch_folder_id'] as String?,
       title: json['title'] as String? ?? 'Practice paper',
       language: json['language'] as String? ?? 'en',
       status: json['status'] as String? ?? 'ready',
@@ -202,6 +208,32 @@ class PapersRepository {
     try {
       final response = await _dio.post<Map<String, dynamic>>(
         '/notes/$noteId/generate-paper',
+        data: {'language': language},
+        options: Options(
+          receiveTimeout: const Duration(seconds: 120),
+          sendTimeout: const Duration(seconds: 30),
+        ),
+      );
+      final data = response.data;
+      if (data == null) {
+        throw const ServerFailure('Empty paper response');
+      }
+      return PaperDetail.fromJson(data);
+    } on DioException catch (error) {
+      throw NetworkFailure(_dioMessage(error));
+    } catch (error) {
+      if (error is AppFailure) rethrow;
+      throw UnexpectedFailure(error.toString());
+    }
+  }
+
+  Future<PaperDetail> generatePaperFromBatch({
+    required String batchId,
+    required String language,
+  }) async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/batches/$batchId/generate-paper',
         data: {'language': language},
         options: Options(
           receiveTimeout: const Duration(seconds: 120),

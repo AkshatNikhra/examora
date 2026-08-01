@@ -6,6 +6,10 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/auth_providers.dart';
 import '../../features/auth/presentation/otp_screen.dart';
 import '../../features/auth/presentation/phone_login_screen.dart';
+import '../../features/exams/presentation/batch_detail_screen.dart';
+import '../../features/exams/presentation/exam_detail_screen.dart';
+import '../../features/exams/presentation/exams_list_screen.dart';
+import '../../features/exams/presentation/setup_exam_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/notes/presentation/note_detail_screen.dart';
 import '../../features/notes/presentation/notes_list_screen.dart';
@@ -73,6 +77,32 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/',
         name: 'home',
         builder: (context, state) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: '/setup',
+        name: 'setupExam',
+        builder: (context, state) => const SetupExamScreen(),
+      ),
+      GoRoute(
+        path: '/exams',
+        name: 'exams',
+        builder: (context, state) => const ExamsListScreen(),
+      ),
+      GoRoute(
+        path: '/exams/:examId',
+        name: 'examDetail',
+        builder: (context, state) {
+          final examId = state.pathParameters['examId'] ?? '';
+          return ExamDetailScreen(examId: examId);
+        },
+      ),
+      GoRoute(
+        path: '/batches/:batchId',
+        name: 'batchDetail',
+        builder: (context, state) {
+          final batchId = state.pathParameters['batchId'] ?? '';
+          return BatchDetailScreen(batchId: batchId);
+        },
       ),
       GoRoute(
         path: '/notes',

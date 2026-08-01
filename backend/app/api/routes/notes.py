@@ -50,6 +50,7 @@ async def upload_note(
     file: UploadFile = File(...),
     title: str | None = Form(default=None),
     language: str = Form(default="en"),
+    batch_folder_id: str | None = Form(default=None),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> NoteResponse:
@@ -59,6 +60,7 @@ async def upload_note(
         file=file,
         title=title,
         language=language,
+        batch_folder_id=batch_folder_id,
     )
     if settings.NOTE_AUTO_PROCESS:
         background_tasks.add_task(note_processing.process_note_job, note.id)
@@ -140,6 +142,7 @@ def generate_paper(
     return PaperDetailResponse(
         id=paper.id,
         note_id=paper.note_id,
+        batch_folder_id=paper.batch_folder_id,
         title=paper.title,
         language=paper.language,
         status=paper.status,

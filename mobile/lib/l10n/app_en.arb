@@ -284,5 +284,140 @@
   "attemptRetry": "Try again",
   "@attemptRetry": {
     "description": "Retry same paper"
+  },
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Generic cancel"
+  },
+  "setupExamTitle": "Your exam",
+  "@setupExamTitle": {
+    "description": "Setup exam app bar"
+  },
+  "setupExamHeadline": "What exam are you preparing for?",
+  "@setupExamHeadline": {
+    "description": "Setup exam headline"
+  },
+  "setupExamSubtitle": "We’ll create a folder for this exam. You can add more exams later.",
+  "@setupExamSubtitle": {
+    "description": "Setup exam subtitle"
+  },
+  "setupExamFieldLabel": "Exam name",
+  "@setupExamFieldLabel": {
+    "description": "Exam name field label"
+  },
+  "setupExamFieldHint": "e.g. UPSC Prelims, State PSC",
+  "@setupExamFieldHint": {
+    "description": "Exam name field hint"
+  },
+  "setupExamRequired": "Enter an exam name to continue.",
+  "@setupExamRequired": {
+    "description": "Validation when exam name empty"
+  },
+  "setupExamContinue": "Continue",
+  "@setupExamContinue": {
+    "description": "Setup continue button"
+  },
+  "homeExamsCta": "My exams",
+  "@homeExamsCta": {
+    "description": "Home button to exams"
+  },
+  "examsListTitle": "My exams",
+  "@examsListTitle": {
+    "description": "Exams list app bar"
+  },
+  "examsListEmpty": "No exams yet. Add the exam you are preparing for.",
+  "@examsListEmpty": {
+    "description": "Empty exams list"
+  },
+  "examsAddCta": "Add exam",
+  "@examsAddCta": {
+    "description": "FAB add exam"
+  },
+  "examsAddTitle": "Add exam",
+  "@examsAddTitle": {
+    "description": "Add exam dialog title"
+  },
+  "examsAddConfirm": "Add",
+  "@examsAddConfirm": {
+    "description": "Confirm add exam"
+  },
+  "examsBatchCount": "{count} upload batches",
+  "@examsBatchCount": {
+    "description": "Exam list subtitle",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "examDetailTitle": "Exam",
+  "@examDetailTitle": {
+    "description": "Fallback exam detail title"
+  },
+  "batchListTitle": "Upload batches",
+  "@batchListTitle": {
+    "description": "Batches section title"
+  },
+  "batchListEmpty": "No batches yet. Create one (e.g. “a”) and upload notes into it.",
+  "@batchListEmpty": {
+    "description": "Empty batches"
+  },
+  "batchCreateCta": "New batch",
+  "@batchCreateCta": {
+    "description": "Create batch FAB"
+  },
+  "batchCreateTitle": "New upload batch",
+  "@batchCreateTitle": {
+    "description": "Create batch dialog title"
+  },
+  "batchCreateConfirm": "Create",
+  "@batchCreateConfirm": {
+    "description": "Confirm create batch"
+  },
+  "batchNameLabel": "Batch name",
+  "@batchNameLabel": {
+    "description": "Batch name field"
+  },
+  "batchNameHint": "e.g. a, Week 1",
+  "@batchNameHint": {
+    "description": "Batch name hint"
+  },
+  "batchSuggestNew": "A test was already created from a batch. Prefer creating a new batch for new uploads.",
+  "@batchSuggestNew": {
+    "description": "Fallback post-test nudge"
+  },
+  "batchMeta": "{notes} notes · {paperStatus}",
+  "@batchMeta": {
+    "description": "Batch list subtitle",
+    "placeholders": {
+      "notes": {"type": "int"},
+      "paperStatus": {"type": "String"}
+    }
+  },
+  "batchHasPaper": "test created",
+  "@batchHasPaper": {
+    "description": "Batch has paper label"
+  },
+  "batchNoPaper": "no test yet",
+  "@batchNoPaper": {
+    "description": "Batch no paper label"
+  },
+  "batchDetailTitle": "Batch",
+  "@batchDetailTitle": {
+    "description": "Fallback batch title"
+  },
+  "batchNotesTitle": "Notes in this batch",
+  "@batchNotesTitle": {
+    "description": "Notes section in batch"
+  },
+  "batchNotesEmpty": "Upload PDFs into this batch (max 20 pages total for a test).",
+  "@batchNotesEmpty": {
+    "description": "Empty batch notes"
+  },
+  "batchCreateTestCta": "Create practice test",
+  "@batchCreateTestCta": {
+    "description": "Generate paper from batch"
+  },
+  "batchCreateTestHint": "Uses Ready notes in this batch. Process uploaded notes first if needed.",
+  "@batchCreateTestHint": {
+    "description": "Hint under create test"
   }
 }

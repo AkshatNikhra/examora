@@ -225,4 +225,110 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get attemptRetry => 'Try again';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get setupExamTitle => 'Your exam';
+
+  @override
+  String get setupExamHeadline => 'What exam are you preparing for?';
+
+  @override
+  String get setupExamSubtitle =>
+      'We’ll create a folder for this exam. You can add more exams later.';
+
+  @override
+  String get setupExamFieldLabel => 'Exam name';
+
+  @override
+  String get setupExamFieldHint => 'e.g. UPSC Prelims, State PSC';
+
+  @override
+  String get setupExamRequired => 'Enter an exam name to continue.';
+
+  @override
+  String get setupExamContinue => 'Continue';
+
+  @override
+  String get homeExamsCta => 'My exams';
+
+  @override
+  String get examsListTitle => 'My exams';
+
+  @override
+  String get examsListEmpty =>
+      'No exams yet. Add the exam you are preparing for.';
+
+  @override
+  String get examsAddCta => 'Add exam';
+
+  @override
+  String get examsAddTitle => 'Add exam';
+
+  @override
+  String get examsAddConfirm => 'Add';
+
+  @override
+  String examsBatchCount(int count) {
+    return '$count upload batches';
+  }
+
+  @override
+  String get examDetailTitle => 'Exam';
+
+  @override
+  String get batchListTitle => 'Upload batches';
+
+  @override
+  String get batchListEmpty =>
+      'No batches yet. Create one (e.g. “a”) and upload notes into it.';
+
+  @override
+  String get batchCreateCta => 'New batch';
+
+  @override
+  String get batchCreateTitle => 'New upload batch';
+
+  @override
+  String get batchCreateConfirm => 'Create';
+
+  @override
+  String get batchNameLabel => 'Batch name';
+
+  @override
+  String get batchNameHint => 'e.g. a, Week 1';
+
+  @override
+  String get batchSuggestNew =>
+      'A test was already created from a batch. Prefer creating a new batch for new uploads.';
+
+  @override
+  String batchMeta(int notes, String paperStatus) {
+    return '$notes notes · $paperStatus';
+  }
+
+  @override
+  String get batchHasPaper => 'test created';
+
+  @override
+  String get batchNoPaper => 'no test yet';
+
+  @override
+  String get batchDetailTitle => 'Batch';
+
+  @override
+  String get batchNotesTitle => 'Notes in this batch';
+
+  @override
+  String get batchNotesEmpty =>
+      'Upload PDFs into this batch (max 20 pages total for a test).';
+
+  @override
+  String get batchCreateTestCta => 'Create practice test';
+
+  @override
+  String get batchCreateTestHint =>
+      'Uses Ready notes in this batch. Process uploaded notes first if needed.';
 }

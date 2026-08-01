@@ -10,7 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.models import Note, NoteStatus, User
+from app.models import BatchFolder, Note, NoteStatus, User
 from app.services.r2 import upload_pdf
 
 
@@ -21,6 +21,7 @@ async def create_note_from_upload(
     file: UploadFile,
     title: str | None,
     language: str,
+    batch_folder_id: str | None = None,
 ) -> Note:
     if file.content_type not in {"application/pdf", "application/x-pdf", "application/octet-stream"}:
         # Some clients send octet-stream; still require .pdf extension.
@@ -40,6 +41,16 @@ async def create_note_from_upload(
             detail=f"PDF exceeds max size of {settings.MAX_PDF_SIZE_BYTES} bytes",
         )
 
+    resolved_batch_id: str | None = None
+    if batch_folder_id:
+        batch = db.get(BatchFolder, batch_folder_id)
+        if batch is None or batch.user_id != user.id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Batch folder not found",
+            )
+        resolved_batch_id = batch.id
+
     note_id = str(uuid.uuid4())
     original_name = Path(file.filename or "notes.pdf").name
     safe_title = (title or original_name).strip() or "Untitled notes"
@@ -50,6 +61,7 @@ async def create_note_from_upload(
     note = Note(
         id=note_id,
         user_id=user.id,
+        batch_folder_id=resolved_batch_id,
         title=safe_title[:255],
         file_url=object_key,
         language=(language or "en").strip().lower()[:16] or "en",

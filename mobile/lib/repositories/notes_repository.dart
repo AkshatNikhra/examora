@@ -120,6 +120,7 @@ class NotesRepository {
     required String fileName,
     String? title,
     String language = 'en',
+    String? batchFolderId,
     void Function(int sent, int total)? onProgress,
   }) async {
     try {
@@ -130,6 +131,8 @@ class NotesRepository {
         ),
         if (title != null && title.trim().isNotEmpty) 'title': title.trim(),
         'language': language,
+        if (batchFolderId != null && batchFolderId.isNotEmpty)
+          'batch_folder_id': batchFolderId,
       });
 
       final response = await _dio.post<Map<String, dynamic>>(

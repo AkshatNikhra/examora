@@ -34,6 +34,7 @@ class NoteResponse(BaseModel):
     processed_at: datetime | None = None
     created_at: datetime
     has_canonical: bool = False
+    batch_folder_id: str | None = None
 
     @classmethod
     def from_note(cls, note: object) -> "NoteResponse":
@@ -50,6 +51,7 @@ class NoteResponse(BaseModel):
             processed_at=getattr(note, "processed_at", None),
             created_at=note.created_at,  # type: ignore[attr-defined]
             has_canonical=bool(canonical and str(canonical).strip()),
+            batch_folder_id=getattr(note, "batch_folder_id", None),
         )
 
 
@@ -111,7 +113,8 @@ class PaperSummaryResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: str
-    note_id: str
+    note_id: str | None = None
+    batch_folder_id: str | None = None
     title: str
     language: str
     status: str
@@ -152,3 +155,38 @@ class AttemptResponse(BaseModel):
     score_percent: int
     submitted_at: datetime
     answers: list[AttemptAnswerReview]
+
+
+class ExamCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=255)
+
+
+class ExamResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    name: str
+    created_at: datetime
+    batch_count: int = 0
+
+
+class BatchFolderCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=255)
+
+
+class BatchFolderResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    exam_id: str
+    name: str
+    created_at: datetime
+    note_count: int = 0
+    has_paper: bool = False
+    page_count_estimate: int | None = None
+
+
+class ExamUploadHintResponse(BaseModel):
+    suggest_new_batch: bool
+    reason: str | None = None
+    batches_with_papers: list[str] = Field(default_factory=list)

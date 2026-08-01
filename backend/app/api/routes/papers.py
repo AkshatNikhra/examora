@@ -24,6 +24,7 @@ def _summary(paper) -> PaperSummaryResponse:
     return PaperSummaryResponse(
         id=paper.id,
         note_id=paper.note_id,
+        batch_folder_id=paper.batch_folder_id,
         title=paper.title,
         language=paper.language,
         status=paper.status,

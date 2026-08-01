@@ -39,6 +39,52 @@ class User(Base):
     )
 
 
+class Exam(Base):
+    """User-named exam they are preparing for (multi-exam supported)."""
+
+    __tablename__ = "exams"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    user_id: Mapped[str] = mapped_column(
+        String(128),
+        ForeignKey("users.id"),
+        index=True,
+        nullable=False,
+    )
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+
+
+class BatchFolder(Base):
+    """Upload batch inside an exam (e.g. 'a', 'Week 1'). 20-page create limit applies here."""
+
+    __tablename__ = "batch_folders"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    exam_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("exams.id"),
+        index=True,
+        nullable=False,
+    )
+    user_id: Mapped[str] = mapped_column(
+        String(128),
+        ForeignKey("users.id"),
+        index=True,
+        nullable=False,
+    )
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+
+
 class Note(Base):
     """Uploaded study notes PDF owned by a user."""
 
@@ -50,6 +96,12 @@ class Note(Base):
         ForeignKey("users.id"),
         index=True,
         nullable=False,
+    )
+    batch_folder_id: Mapped[str | None] = mapped_column(
+        String(36),
+        ForeignKey("batch_folders.id"),
+        index=True,
+        nullable=True,
     )
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     file_url: Mapped[str] = mapped_column(Text, nullable=False)
@@ -116,7 +168,7 @@ class Question(Base):
 
 
 class QuestionPaper(Base):
-    """Generated practice paper for a user from a note."""
+    """Generated practice paper for a user from a note or batch."""
 
     __tablename__ = "question_papers"
 
@@ -127,11 +179,17 @@ class QuestionPaper(Base):
         index=True,
         nullable=False,
     )
-    note_id: Mapped[str] = mapped_column(
+    note_id: Mapped[str | None] = mapped_column(
         String(36),
         ForeignKey("notes.id"),
         index=True,
-        nullable=False,
+        nullable=True,
+    )
+    batch_folder_id: Mapped[str | None] = mapped_column(
+        String(36),
+        ForeignKey("batch_folders.id"),
+        index=True,
+        nullable=True,
     )
     language: Mapped[str] = mapped_column(String(8), nullable=False)
     status: Mapped[str] = mapped_column(

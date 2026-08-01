@@ -483,6 +483,198 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Try again'**
   String get attemptRetry;
+
+  /// Generic cancel
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// Setup exam app bar
+  ///
+  /// In en, this message translates to:
+  /// **'Your exam'**
+  String get setupExamTitle;
+
+  /// Setup exam headline
+  ///
+  /// In en, this message translates to:
+  /// **'What exam are you preparing for?'**
+  String get setupExamHeadline;
+
+  /// Setup exam subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'We’ll create a folder for this exam. You can add more exams later.'**
+  String get setupExamSubtitle;
+
+  /// Exam name field label
+  ///
+  /// In en, this message translates to:
+  /// **'Exam name'**
+  String get setupExamFieldLabel;
+
+  /// Exam name field hint
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. UPSC Prelims, State PSC'**
+  String get setupExamFieldHint;
+
+  /// Validation when exam name empty
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an exam name to continue.'**
+  String get setupExamRequired;
+
+  /// Setup continue button
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get setupExamContinue;
+
+  /// Home button to exams
+  ///
+  /// In en, this message translates to:
+  /// **'My exams'**
+  String get homeExamsCta;
+
+  /// Exams list app bar
+  ///
+  /// In en, this message translates to:
+  /// **'My exams'**
+  String get examsListTitle;
+
+  /// Empty exams list
+  ///
+  /// In en, this message translates to:
+  /// **'No exams yet. Add the exam you are preparing for.'**
+  String get examsListEmpty;
+
+  /// FAB add exam
+  ///
+  /// In en, this message translates to:
+  /// **'Add exam'**
+  String get examsAddCta;
+
+  /// Add exam dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Add exam'**
+  String get examsAddTitle;
+
+  /// Confirm add exam
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get examsAddConfirm;
+
+  /// Exam list subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'{count} upload batches'**
+  String examsBatchCount(int count);
+
+  /// Fallback exam detail title
+  ///
+  /// In en, this message translates to:
+  /// **'Exam'**
+  String get examDetailTitle;
+
+  /// Batches section title
+  ///
+  /// In en, this message translates to:
+  /// **'Upload batches'**
+  String get batchListTitle;
+
+  /// Empty batches
+  ///
+  /// In en, this message translates to:
+  /// **'No batches yet. Create one (e.g. “a”) and upload notes into it.'**
+  String get batchListEmpty;
+
+  /// Create batch FAB
+  ///
+  /// In en, this message translates to:
+  /// **'New batch'**
+  String get batchCreateCta;
+
+  /// Create batch dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'New upload batch'**
+  String get batchCreateTitle;
+
+  /// Confirm create batch
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get batchCreateConfirm;
+
+  /// Batch name field
+  ///
+  /// In en, this message translates to:
+  /// **'Batch name'**
+  String get batchNameLabel;
+
+  /// Batch name hint
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. a, Week 1'**
+  String get batchNameHint;
+
+  /// Fallback post-test nudge
+  ///
+  /// In en, this message translates to:
+  /// **'A test was already created from a batch. Prefer creating a new batch for new uploads.'**
+  String get batchSuggestNew;
+
+  /// Batch list subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'{notes} notes · {paperStatus}'**
+  String batchMeta(int notes, String paperStatus);
+
+  /// Batch has paper label
+  ///
+  /// In en, this message translates to:
+  /// **'test created'**
+  String get batchHasPaper;
+
+  /// Batch no paper label
+  ///
+  /// In en, this message translates to:
+  /// **'no test yet'**
+  String get batchNoPaper;
+
+  /// Fallback batch title
+  ///
+  /// In en, this message translates to:
+  /// **'Batch'**
+  String get batchDetailTitle;
+
+  /// Notes section in batch
+  ///
+  /// In en, this message translates to:
+  /// **'Notes in this batch'**
+  String get batchNotesTitle;
+
+  /// Empty batch notes
+  ///
+  /// In en, this message translates to:
+  /// **'Upload PDFs into this batch (max 20 pages total for a test).'**
+  String get batchNotesEmpty;
+
+  /// Generate paper from batch
+  ///
+  /// In en, this message translates to:
+  /// **'Create practice test'**
+  String get batchCreateTestCta;
+
+  /// Hint under create test
+  ///
+  /// In en, this message translates to:
+  /// **'Uses Ready notes in this batch. Process uploaded notes first if needed.'**
+  String get batchCreateTestHint;
 }
 
 class _AppLocalizationsDelegate
