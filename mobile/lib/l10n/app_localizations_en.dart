@@ -93,11 +93,55 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notesUploading => 'Uploading PDF…';
 
   @override
-  String get notesUploadSuccess => 'Note uploaded successfully';
+  String get notesUploadSuccess =>
+      'Note saved. AI processing runs when you create a practice paper.';
 
   @override
   String get notesUploadFailed => 'Upload failed';
 
   @override
   String get notesPickFailed => 'Could not read the selected file';
+
+  @override
+  String get notesStatusUploaded => 'Saved (not processed yet)';
+
+  @override
+  String get notesStatusProcessing => 'Processing…';
+
+  @override
+  String get notesStatusReady => 'Ready';
+
+  @override
+  String get notesStatusFailed => 'Failed';
+
+  @override
+  String get notesRetryProcess => 'Retry';
+
+  @override
+  String get noteStartProcess => 'Process notes';
+
+  @override
+  String get noteProcessHint =>
+      'This note is saved only. Tap Process notes to run AI (uses your monthly quota later).';
+
+  @override
+  String get noteDetailTitle => 'Note details';
+
+  @override
+  String get noteRawExtractTitle => 'Extracted from PDF';
+
+  @override
+  String get noteRawExtractSubtitle =>
+      'Exact text pulled from your PDF (before AI cleanup).';
+
+  @override
+  String get noteCanonicalTitle => 'English (AI cleaned)';
+
+  @override
+  String get noteCanonicalSubtitle =>
+      'Cleaned/translated study content used for question papers later.';
+
+  @override
+  String get noteContentEmpty =>
+      'Not processed yet. Create a practice paper to run AI on this note.';
 }

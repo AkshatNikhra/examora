@@ -253,7 +253,7 @@ abstract class AppLocalizations {
   /// Upload success snackbar
   ///
   /// In en, this message translates to:
-  /// **'Note uploaded successfully'**
+  /// **'Note saved. AI processing runs when you create a practice paper.'**
   String get notesUploadSuccess;
 
   /// Upload failure snackbar prefix
@@ -267,6 +267,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not read the selected file'**
   String get notesPickFailed;
+
+  /// Note status: uploaded, waiting for paper creation
+  ///
+  /// In en, this message translates to:
+  /// **'Saved (not processed yet)'**
+  String get notesStatusUploaded;
+
+  /// Note status: processing
+  ///
+  /// In en, this message translates to:
+  /// **'Processing…'**
+  String get notesStatusProcessing;
+
+  /// Note status: ready
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
+  String get notesStatusReady;
+
+  /// Note status: failed
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get notesStatusFailed;
+
+  /// Retry note processing button
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get notesRetryProcess;
+
+  /// Button to start AI processing on a saved note
+  ///
+  /// In en, this message translates to:
+  /// **'Process notes'**
+  String get noteStartProcess;
+
+  /// Hint shown on uploaded note before processing
+  ///
+  /// In en, this message translates to:
+  /// **'This note is saved only. Tap Process notes to run AI (uses your monthly quota later).'**
+  String get noteProcessHint;
+
+  /// Note detail screen app bar
+  ///
+  /// In en, this message translates to:
+  /// **'Note details'**
+  String get noteDetailTitle;
+
+  /// Raw PDF text section title
+  ///
+  /// In en, this message translates to:
+  /// **'Extracted from PDF'**
+  String get noteRawExtractTitle;
+
+  /// Raw PDF text section subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Exact text pulled from your PDF (before AI cleanup).'**
+  String get noteRawExtractSubtitle;
+
+  /// Canonical English section title
+  ///
+  /// In en, this message translates to:
+  /// **'English (AI cleaned)'**
+  String get noteCanonicalTitle;
+
+  /// Canonical English section subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Cleaned/translated study content used for question papers later.'**
+  String get noteCanonicalSubtitle;
+
+  /// Shown when extract/canonical text is missing
+  ///
+  /// In en, this message translates to:
+  /// **'Not processed yet. Create a practice paper to run AI on this note.'**
+  String get noteContentEmpty;
 }
 
 class _AppLocalizationsDelegate

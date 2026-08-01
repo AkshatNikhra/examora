@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/errors/app_failure.dart';
 import '../../../l10n/app_localizations.dart';
@@ -20,6 +23,27 @@ class NotesListScreen extends ConsumerStatefulWidget {
 class _NotesListScreenState extends ConsumerState<NotesListScreen> {
   bool _uploading = false;
   double? _progress;
+  Timer? _pollTimer;
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    super.dispose();
+  }
+
+  void _syncPolling(List<NoteItem>? items) {
+    final needsPoll =
+        items?.any((n) => n.status == 'processing') ?? false;
+    if (needsPoll) {
+      _pollTimer ??= Timer.periodic(const Duration(seconds: 2), (_) {
+        if (!mounted) return;
+        ref.invalidate(notesListProvider);
+      });
+    } else {
+      _pollTimer?.cancel();
+      _pollTimer = null;
+    }
+  }
 
   Future<void> _pickAndUpload() async {
     final l10n = AppLocalizations.of(context);
@@ -76,11 +100,47 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen> {
     }
   }
 
+  Future<void> _retryProcess(NoteItem note) async {
+    final l10n = AppLocalizations.of(context);
+    try {
+      await ref.read(notesRepositoryProvider).processNote(note.id);
+      ref.invalidate(notesListProvider);
+    } catch (error) {
+      if (!mounted) return;
+      final message = error is AppFailure ? error.message : l10n.genericError;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    }
+  }
+
+  String _statusLabel(AppLocalizations l10n, String status) {
+    return switch (status) {
+      'processing' => l10n.notesStatusProcessing,
+      'ready' => l10n.notesStatusReady,
+      'failed' => l10n.notesStatusFailed,
+      _ => l10n.notesStatusUploaded,
+    };
+  }
+
+  Color _statusColor(ColorScheme scheme, String status) {
+    return switch (status) {
+      'processing' => scheme.tertiary,
+      'ready' => scheme.primary,
+      'failed' => scheme.error,
+      _ => scheme.outline,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final notes = ref.watch(notesListProvider);
     final theme = Theme.of(context);
+
+    ref.listen(notesListProvider, (_, next) {
+      next.whenData(_syncPolling);
+    });
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.notesTitle)),
@@ -102,6 +162,7 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen> {
             Expanded(
               child: notes.when(
                 data: (items) {
+                  _syncPolling(items);
                   if (items.isEmpty) {
                     return Center(
                       child: Padding(
@@ -127,16 +188,54 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen> {
                       separatorBuilder: (_, _) => const SizedBox(height: 8),
                       itemBuilder: (context, index) {
                         final note = items[index];
+                        final statusColor =
+                            _statusColor(theme.colorScheme, note.status);
                         return Card(
                           child: ListTile(
+                            onTap: () {
+                              // Path push (not named) — survives hot reload better
+                              context.push('/notes/${note.id}');
+                            },
                             title: Text(note.title),
-                            subtitle: Text(
-                              '${note.status} · ${note.language}',
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: 4),
+                                Text(
+                                  '${_statusLabel(l10n, note.status)} · ${note.language}',
+                                ),
+                                if (note.status == 'failed' &&
+                                    (note.errorMessage?.isNotEmpty ?? false))
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 4),
+                                    child: Text(
+                                      note.errorMessage!,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: theme.colorScheme.error,
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
-                            trailing: Text(
-                              _shortDate(note.createdAt),
-                              style: theme.textTheme.bodySmall,
-                            ),
+                            isThreeLine: note.status == 'failed',
+                            trailing: switch (note.status) {
+                              'failed' || 'uploaded' => TextButton(
+                                  onPressed: () => _retryProcess(note),
+                                  child: Text(
+                                    note.status == 'failed'
+                                        ? l10n.notesRetryProcess
+                                        : l10n.noteStartProcess,
+                                  ),
+                                ),
+                              _ => Text(
+                                  _shortDate(note.createdAt),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: statusColor,
+                                  ),
+                                ),
+                            },
                           ),
                         );
                       },

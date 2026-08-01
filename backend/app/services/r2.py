@@ -47,3 +47,22 @@ def upload_pdf(*, key: str, body: bytes, content_type: str = "application/pdf") 
             detail=f"Failed to upload file to R2: {exc}",
         ) from exc
     return key
+
+
+def download_pdf(*, key: str) -> bytes:
+    """Download PDF bytes from R2 by object key."""
+    client = get_r2_client()
+    try:
+        response = client.get_object(Bucket=settings.R2_BUCKET_NAME, Key=key)
+        body = response["Body"].read()
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Failed to download file from R2: {exc}",
+        ) from exc
+    if not body:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Downloaded PDF from R2 was empty",
+        )
+    return body

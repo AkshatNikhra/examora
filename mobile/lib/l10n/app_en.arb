@@ -114,7 +114,7 @@
   "@notesUploading": {
     "description": "Upload in progress label"
   },
-  "notesUploadSuccess": "Note uploaded successfully",
+  "notesUploadSuccess": "Note saved. AI processing runs when you create a practice paper.",
   "@notesUploadSuccess": {
     "description": "Upload success snackbar"
   },
@@ -125,5 +125,57 @@
   "notesPickFailed": "Could not read the selected file",
   "@notesPickFailed": {
     "description": "File picker path missing"
+  },
+  "notesStatusUploaded": "Saved (not processed yet)",
+  "@notesStatusUploaded": {
+    "description": "Note status: uploaded, waiting for paper creation"
+  },
+  "notesStatusProcessing": "Processing…",
+  "@notesStatusProcessing": {
+    "description": "Note status: processing"
+  },
+  "notesStatusReady": "Ready",
+  "@notesStatusReady": {
+    "description": "Note status: ready"
+  },
+  "notesStatusFailed": "Failed",
+  "@notesStatusFailed": {
+    "description": "Note status: failed"
+  },
+  "notesRetryProcess": "Retry",
+  "@notesRetryProcess": {
+    "description": "Retry note processing button"
+  },
+  "noteStartProcess": "Process notes",
+  "@noteStartProcess": {
+    "description": "Button to start AI processing on a saved note"
+  },
+  "noteProcessHint": "This note is saved only. Tap Process notes to run AI (uses your monthly quota later).",
+  "@noteProcessHint": {
+    "description": "Hint shown on uploaded note before processing"
+  },
+  "noteDetailTitle": "Note details",
+  "@noteDetailTitle": {
+    "description": "Note detail screen app bar"
+  },
+  "noteRawExtractTitle": "Extracted from PDF",
+  "@noteRawExtractTitle": {
+    "description": "Raw PDF text section title"
+  },
+  "noteRawExtractSubtitle": "Exact text pulled from your PDF (before AI cleanup).",
+  "@noteRawExtractSubtitle": {
+    "description": "Raw PDF text section subtitle"
+  },
+  "noteCanonicalTitle": "English (AI cleaned)",
+  "@noteCanonicalTitle": {
+    "description": "Canonical English section title"
+  },
+  "noteCanonicalSubtitle": "Cleaned/translated study content used for question papers later.",
+  "@noteCanonicalSubtitle": {
+    "description": "Canonical English section subtitle"
+  },
+  "noteContentEmpty": "Not processed yet. Create a practice paper to run AI on this note.",
+  "@noteContentEmpty": {
+    "description": "Shown when extract/canonical text is missing"
   }
 }

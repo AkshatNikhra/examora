@@ -12,6 +12,9 @@ class NoteItem {
     required this.language,
     required this.status,
     required this.createdAt,
+    this.errorMessage,
+    this.hasCanonical = false,
+    this.sourceLanguage,
   });
 
   final String id;
@@ -20,6 +23,9 @@ class NoteItem {
   final String language;
   final String status;
   final DateTime createdAt;
+  final String? errorMessage;
+  final bool hasCanonical;
+  final String? sourceLanguage;
 
   factory NoteItem.fromJson(Map<String, dynamic> json) {
     return NoteItem(
@@ -29,6 +35,45 @@ class NoteItem {
       language: json['language'] as String? ?? 'en',
       status: json['status'] as String? ?? 'uploaded',
       createdAt: DateTime.parse(json['created_at'] as String),
+      errorMessage: json['error_message'] as String?,
+      hasCanonical: json['has_canonical'] as bool? ?? false,
+      sourceLanguage: json['source_language'] as String?,
+    );
+  }
+}
+
+class NoteDetail extends NoteItem {
+  NoteDetail({
+    required super.id,
+    required super.title,
+    required super.fileUrl,
+    required super.language,
+    required super.status,
+    required super.createdAt,
+    super.errorMessage,
+    super.hasCanonical,
+    super.sourceLanguage,
+    this.rawExtractedText,
+    this.canonicalContentEn,
+  });
+
+  final String? rawExtractedText;
+  final String? canonicalContentEn;
+
+  factory NoteDetail.fromJson(Map<String, dynamic> json) {
+    final base = NoteItem.fromJson(json);
+    return NoteDetail(
+      id: base.id,
+      title: base.title,
+      fileUrl: base.fileUrl,
+      language: base.language,
+      status: base.status,
+      createdAt: base.createdAt,
+      errorMessage: base.errorMessage,
+      hasCanonical: base.hasCanonical,
+      sourceLanguage: base.sourceLanguage,
+      rawExtractedText: json['raw_extracted_text'] as String?,
+      canonicalContentEn: json['canonical_content_en'] as String?,
     );
   }
 }
@@ -46,6 +91,22 @@ class NotesRepository {
           .whereType<Map<String, dynamic>>()
           .map(NoteItem.fromJson)
           .toList();
+    } on DioException catch (error) {
+      throw NetworkFailure(_dioMessage(error));
+    } catch (error) {
+      if (error is AppFailure) rethrow;
+      throw UnexpectedFailure(error.toString());
+    }
+  }
+
+  Future<NoteDetail> getNote(String noteId) async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>('/notes/$noteId');
+      final data = response.data;
+      if (data == null) {
+        throw const ServerFailure('Empty note response');
+      }
+      return NoteDetail.fromJson(data);
     } on DioException catch (error) {
       throw NetworkFailure(_dioMessage(error));
     } catch (error) {
@@ -79,6 +140,24 @@ class NotesRepository {
       final data = response.data;
       if (data == null) {
         throw const ServerFailure('Empty upload response');
+      }
+      return NoteItem.fromJson(data);
+    } on DioException catch (error) {
+      throw NetworkFailure(_dioMessage(error));
+    } catch (error) {
+      if (error is AppFailure) rethrow;
+      throw UnexpectedFailure(error.toString());
+    }
+  }
+
+  Future<NoteItem> processNote(String noteId) async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/notes/$noteId/process',
+      );
+      final data = response.data;
+      if (data == null) {
+        throw const ServerFailure('Empty process response');
       }
       return NoteItem.fromJson(data);
     } on DioException catch (error) {

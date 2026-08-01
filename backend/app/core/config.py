@@ -32,6 +32,20 @@ class Settings(BaseSettings):
 
     MAX_PDF_SIZE_BYTES: int = 20 * 1024 * 1024  # 20 MB
 
+    # Phase 3 — cheap AI; full doc = chunk→stitch. Dev: keep NOTE_AI_MAX_CHUNKS=1.
+    NOTE_AI_PROVIDER: str = "openai"
+    # False = upload only stores PDF; process when creating a practice paper (Phase 4)
+    NOTE_AUTO_PROCESS: bool = False
+    # Max chars per LLM request
+    NOTE_AI_MAX_INPUT_CHARS: int = 12000
+    NOTE_AI_MAX_OUTPUT_TOKENS: int = 2500
+    NOTE_AI_CHUNK_OVERLAP: int = 200
+    # Dev default 1 = first chunk only (cheap). Raise (e.g. 20) for full-document.
+    NOTE_AI_MAX_CHUNKS: int = 1
+    OPENAI_API_KEY: str = ""
+    OPENAI_MODEL: str = "gpt-4o-mini"
+    OPENAI_BASE_URL: str = "https://api.openai.com/v1"
+
     @property
     def cors_origins_list(self) -> list[str]:
         if self.CORS_ORIGINS.strip() == "*":

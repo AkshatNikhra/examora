@@ -50,6 +50,14 @@ class Note(Base):
         default=NoteStatus.UPLOADED.value,
         nullable=False,
     )
+    raw_extracted_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    canonical_content_en: Mapped[str | None] = mapped_column(Text, nullable=True)
+    source_language: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    processed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
