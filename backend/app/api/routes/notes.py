@@ -132,8 +132,6 @@ def generate_paper(
                 question.option_c,
                 question.option_d,
             ],
-            correct_index=question.correct_index,
-            explanation=question.explanation,
             topic=question.topic,
             variant_group_id=question.variant_group_id,
         )

@@ -47,6 +47,11 @@ def ensure_note_processing_columns(engine: Engine) -> None:
 
 
 def ensure_phase4_schema(engine: Engine) -> None:
-    """Add Phase 4 user column + create paper/question tables if missing."""
+    """Add Phase 4+ user column + create paper/question/attempt tables if missing."""
     _add_columns(engine, "users", _USER_COLUMNS)
+    Base.metadata.create_all(bind=engine)
+
+
+def ensure_phase5_schema(engine: Engine) -> None:
+    """Create attempt tables if missing (idempotent create_all)."""
     Base.metadata.create_all(bind=engine)

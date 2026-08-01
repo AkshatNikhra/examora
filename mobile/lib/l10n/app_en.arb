@@ -217,5 +217,72 @@
   "paperViewHint": "Review questions below. Attempt & score come in the next phase.",
   "@paperViewHint": {
     "description": "Hint on paper detail before Phase 5 attempt UI"
+  },
+  "homePapersCta": "My practice papers",
+  "@homePapersCta": {
+    "description": "Home button to open papers list"
+  },
+  "papersListTitle": "Practice papers",
+  "@papersListTitle": {
+    "description": "Papers list app bar"
+  },
+  "papersListEmpty": "No papers yet. Open a Ready note and create a practice paper.",
+  "@papersListEmpty": {
+    "description": "Empty papers list"
+  },
+  "attemptHint": "Select one option for each question, then submit to see your score.",
+  "@attemptHint": {
+    "description": "Hint above attempt questions"
+  },
+  "attemptProgress": "Answered {answered} of {total}",
+  "@attemptProgress": {
+    "description": "Attempt progress counter",
+    "placeholders": {
+      "answered": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "attemptAnswerAll": "Answer every question before submitting.",
+  "@attemptAnswerAll": {
+    "description": "Validation when submit with missing answers"
+  },
+  "attemptSubmit": "Submit answers",
+  "@attemptSubmit": {
+    "description": "Submit attempt button"
+  },
+  "attemptNoQuestions": "This paper has no questions.",
+  "@attemptNoQuestions": {
+    "description": "Empty paper attempt state"
+  },
+  "attemptScoreTitle": "Your score",
+  "@attemptScoreTitle": {
+    "description": "Score screen app bar"
+  },
+  "attemptScoreHeadline": "{percent}%",
+  "@attemptScoreHeadline": {
+    "description": "Big score percent",
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
+  "attemptScoreMeta": "{correct} of {total} correct",
+  "@attemptScoreMeta": {
+    "description": "Score fraction line",
+    "placeholders": {
+      "correct": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "attemptReviewTitle": "Review",
+  "@attemptReviewTitle": {
+    "description": "Review section heading"
+  },
+  "attemptBackToPapers": "Papers",
+  "@attemptBackToPapers": {
+    "description": "Back to papers list"
+  },
+  "attemptRetry": "Try again",
+  "@attemptRetry": {
+    "description": "Retry same paper"
   }
 }

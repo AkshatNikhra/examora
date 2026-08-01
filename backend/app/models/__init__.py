@@ -168,3 +168,52 @@ class PaperQuestion(Base):
         nullable=False,
     )
     order_index: Mapped[int] = mapped_column(Integer, nullable=False)
+
+
+class PaperAttempt(Base):
+    """One submitted attempt of a practice paper."""
+
+    __tablename__ = "paper_attempts"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    user_id: Mapped[str] = mapped_column(
+        String(128),
+        ForeignKey("users.id"),
+        index=True,
+        nullable=False,
+    )
+    paper_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("question_papers.id"),
+        index=True,
+        nullable=False,
+    )
+    correct_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    total_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    submitted_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+
+
+class AttemptAnswer(Base):
+    """Selected option for one question on an attempt."""
+
+    __tablename__ = "attempt_answers"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    attempt_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("paper_attempts.id"),
+        index=True,
+        nullable=False,
+    )
+    question_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("questions.id"),
+        index=True,
+        nullable=False,
+    )
+    selected_index: Mapped[int] = mapped_column(Integer, nullable=False)  # 0-3
+    is_correct: Mapped[int] = mapped_column(Integer, nullable=False)  # 0/1 for SQLite ease

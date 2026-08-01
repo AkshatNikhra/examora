@@ -111,6 +111,11 @@ class HomeScreen extends ConsumerWidget {
                 onPressed: () => context.push('/notes'),
                 child: Text(l10n.homeCta),
               ),
+              const SizedBox(height: 12),
+              OutlinedButton(
+                onPressed: () => context.push('/papers'),
+                child: Text(l10n.homePapersCta),
+              ),
             ],
           ),
         ),

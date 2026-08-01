@@ -175,4 +175,54 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get paperViewHint =>
       'Review questions below. Attempt & score come in the next phase.';
+
+  @override
+  String get homePapersCta => 'My practice papers';
+
+  @override
+  String get papersListTitle => 'Practice papers';
+
+  @override
+  String get papersListEmpty =>
+      'No papers yet. Open a Ready note and create a practice paper.';
+
+  @override
+  String get attemptHint =>
+      'Select one option for each question, then submit to see your score.';
+
+  @override
+  String attemptProgress(int answered, int total) {
+    return 'Answered $answered of $total';
+  }
+
+  @override
+  String get attemptAnswerAll => 'Answer every question before submitting.';
+
+  @override
+  String get attemptSubmit => 'Submit answers';
+
+  @override
+  String get attemptNoQuestions => 'This paper has no questions.';
+
+  @override
+  String get attemptScoreTitle => 'Your score';
+
+  @override
+  String attemptScoreHeadline(int percent) {
+    return '$percent%';
+  }
+
+  @override
+  String attemptScoreMeta(int correct, int total) {
+    return '$correct of $total correct';
+  }
+
+  @override
+  String get attemptReviewTitle => 'Review';
+
+  @override
+  String get attemptBackToPapers => 'Papers';
+
+  @override
+  String get attemptRetry => 'Try again';
 }

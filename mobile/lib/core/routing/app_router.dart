@@ -9,13 +9,20 @@ import '../../features/auth/presentation/phone_login_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/notes/presentation/note_detail_screen.dart';
 import '../../features/notes/presentation/notes_list_screen.dart';
+import '../../features/papers/presentation/attempt_score_screen.dart';
 import '../../features/papers/presentation/paper_detail_screen.dart';
+import '../../features/papers/presentation/papers_list_screen.dart';
+import '../../repositories/papers_repository.dart';
 import 'go_router_refresh.dart';
+
+/// Root navigator — full-screen child routes (score) sit above paper detail.
+final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authRepository = ref.watch(authRepositoryProvider);
 
   return GoRouter(
+    navigatorKey: _rootNavigatorKey,
     initialLocation: '/',
     refreshListenable: GoRouterRefreshStream(authRepository.authStateChanges()),
     errorBuilder: (context, state) => Scaffold(
@@ -81,12 +88,34 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
+        path: '/papers',
+        name: 'papers',
+        builder: (context, state) => const PapersListScreen(),
+      ),
+      GoRoute(
         path: '/papers/:paperId',
         name: 'paperDetail',
         builder: (context, state) {
           final paperId = state.pathParameters['paperId'] ?? '';
           return PaperDetailScreen(paperId: paperId);
         },
+        routes: [
+          GoRoute(
+            path: 'attempts/:attemptId',
+            name: 'attemptScore',
+            parentNavigatorKey: _rootNavigatorKey,
+            builder: (context, state) {
+              final paperId = state.pathParameters['paperId'] ?? '';
+              final attemptId = state.pathParameters['attemptId'] ?? '';
+              final extra = state.extra;
+              return AttemptScoreScreen(
+                paperId: paperId,
+                attemptId: attemptId,
+                initialResult: extra is AttemptResult ? extra : null,
+              );
+            },
+          ),
+        ],
       ),
     ],
   );

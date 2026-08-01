@@ -94,14 +94,17 @@ class GeneratePaperRequest(BaseModel):
 
 
 class PaperQuestionResponse(BaseModel):
+    """Paper question for attempt UI — answers omitted until submit."""
+
     id: str
     order_index: int
     stem: str
     options: list[str]
-    correct_index: int
-    explanation: str | None = None
     topic: str | None = None
     variant_group_id: str
+    # Only present on attempt review responses
+    correct_index: int | None = None
+    explanation: str | None = None
 
 
 class PaperSummaryResponse(BaseModel):
@@ -118,3 +121,34 @@ class PaperSummaryResponse(BaseModel):
 
 class PaperDetailResponse(PaperSummaryResponse):
     questions: list[PaperQuestionResponse]
+
+
+class AttemptAnswerSubmit(BaseModel):
+    question_id: str
+    selected_index: int = Field(..., ge=0, le=3)
+
+
+class AttemptSubmitRequest(BaseModel):
+    answers: list[AttemptAnswerSubmit] = Field(..., min_length=1)
+
+
+class AttemptAnswerReview(BaseModel):
+    question_id: str
+    order_index: int
+    stem: str
+    options: list[str]
+    selected_index: int
+    correct_index: int
+    is_correct: bool
+    explanation: str | None = None
+    topic: str | None = None
+
+
+class AttemptResponse(BaseModel):
+    id: str
+    paper_id: str
+    correct_count: int
+    total_count: int
+    score_percent: int
+    submitted_at: datetime
+    answers: list[AttemptAnswerReview]

@@ -399,6 +399,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Review questions below. Attempt & score come in the next phase.'**
   String get paperViewHint;
+
+  /// Home button to open papers list
+  ///
+  /// In en, this message translates to:
+  /// **'My practice papers'**
+  String get homePapersCta;
+
+  /// Papers list app bar
+  ///
+  /// In en, this message translates to:
+  /// **'Practice papers'**
+  String get papersListTitle;
+
+  /// Empty papers list
+  ///
+  /// In en, this message translates to:
+  /// **'No papers yet. Open a Ready note and create a practice paper.'**
+  String get papersListEmpty;
+
+  /// Hint above attempt questions
+  ///
+  /// In en, this message translates to:
+  /// **'Select one option for each question, then submit to see your score.'**
+  String get attemptHint;
+
+  /// Attempt progress counter
+  ///
+  /// In en, this message translates to:
+  /// **'Answered {answered} of {total}'**
+  String attemptProgress(int answered, int total);
+
+  /// Validation when submit with missing answers
+  ///
+  /// In en, this message translates to:
+  /// **'Answer every question before submitting.'**
+  String get attemptAnswerAll;
+
+  /// Submit attempt button
+  ///
+  /// In en, this message translates to:
+  /// **'Submit answers'**
+  String get attemptSubmit;
+
+  /// Empty paper attempt state
+  ///
+  /// In en, this message translates to:
+  /// **'This paper has no questions.'**
+  String get attemptNoQuestions;
+
+  /// Score screen app bar
+  ///
+  /// In en, this message translates to:
+  /// **'Your score'**
+  String get attemptScoreTitle;
+
+  /// Big score percent
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}%'**
+  String attemptScoreHeadline(int percent);
+
+  /// Score fraction line
+  ///
+  /// In en, this message translates to:
+  /// **'{correct} of {total} correct'**
+  String attemptScoreMeta(int correct, int total);
+
+  /// Review section heading
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get attemptReviewTitle;
+
+  /// Back to papers list
+  ///
+  /// In en, this message translates to:
+  /// **'Papers'**
+  String get attemptBackToPapers;
+
+  /// Retry same paper
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get attemptRetry;
 }
 
 class _AppLocalizationsDelegate
