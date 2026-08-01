@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/errors/app_failure.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../repositories/notes_repository.dart';
+import '../../../repositories/papers_repository.dart';
 import 'notes_list_screen.dart';
 
 final noteDetailProvider =
@@ -25,6 +27,7 @@ class NoteDetailScreen extends ConsumerStatefulWidget {
 class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
   Timer? _pollTimer;
   bool _starting = false;
+  bool _generating = false;
 
   @override
   void dispose() {
@@ -33,7 +36,6 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
   }
 
   void _syncPolling(NoteDetail? note) {
-    // Only poll while backend is actually processing — not for "uploaded"
     final busy = note?.status == 'processing';
     if (busy) {
       _pollTimer ??= Timer.periodic(const Duration(seconds: 2), (_) {
@@ -60,6 +62,49 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
     } finally {
       if (mounted) setState(() => _starting = false);
+    }
+  }
+
+  Future<String?> _pickLanguage() async {
+    final l10n = AppLocalizations.of(context);
+    return showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.paperLanguageTitle),
+        content: Text(l10n.paperLanguageSubtitle),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'en'),
+            child: Text(l10n.paperLanguageEnglish),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'hi'),
+            child: Text(l10n.paperLanguageHindi),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _createPaper() async {
+    final l10n = AppLocalizations.of(context);
+    final language = await _pickLanguage();
+    if (language == null || !mounted) return;
+
+    setState(() => _generating = true);
+    try {
+      final paper = await ref.read(papersRepositoryProvider).generatePaper(
+            noteId: widget.noteId,
+            language: language,
+          );
+      if (!mounted) return;
+      context.push('/papers/${paper.id}');
+    } catch (error) {
+      if (!mounted) return;
+      final message = error is AppFailure ? error.message : l10n.genericError;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    } finally {
+      if (mounted) setState(() => _generating = false);
     }
   }
 
@@ -151,6 +196,27 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
                   const LinearProgressIndicator(),
                   const SizedBox(height: 8),
                   Text(l10n.notesStatusProcessing),
+                ],
+                if (note.status == 'ready') ...[
+                  const SizedBox(height: 16),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: FilledButton.icon(
+                      onPressed: _generating ? null : _createPaper,
+                      icon: _generating
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.quiz_outlined),
+                      label: Text(
+                        _generating
+                            ? l10n.paperGenerating
+                            : l10n.paperCreateCta,
+                      ),
+                    ),
+                  ),
                 ],
                 const SizedBox(height: 20),
                 _TextSection(

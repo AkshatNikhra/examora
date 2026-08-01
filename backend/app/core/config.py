@@ -52,6 +52,18 @@ class Settings(BaseSettings):
     OCR_MIN_TEXT_CHARS: int = 100
     OCR_MAX_PAGES: int = 20
 
+    # Phase 4 — paper generation (keep small while developing)
+    PAPER_MONTHLY_CREATE_LIMIT: int = 4
+    PAPER_MAX_PAGES: int = 20
+    PAPER_SIZE_RATIO: float = 0.3
+    PAPER_MIN_QUESTIONS: int = 5
+    PAPER_MAX_QUESTIONS: int = 15
+    PAPER_COOLDOWN_DAYS: int = 14
+    PAPER_COOLDOWN_GENERATIONS: int = 2
+    # How many unique concepts to ask the model to generate per create (cheap)
+    PAPER_GENERATE_UNIQUE_TARGET: int = 12
+    PAPER_GENERATE_VARIANTS_PER_CONCEPT: int = 2
+
     @property
     def cors_origins_list(self) -> list[str]:
         if self.CORS_ORIGINS.strip() == "*":

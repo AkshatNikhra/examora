@@ -345,6 +345,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not processed yet. Create a practice paper to run AI on this note.'**
   String get noteContentEmpty;
+
+  /// Generate MCQ paper from ready note
+  ///
+  /// In en, this message translates to:
+  /// **'Create practice paper'**
+  String get paperCreateCta;
+
+  /// Shown while MCQ paper is generating
+  ///
+  /// In en, this message translates to:
+  /// **'Generating paper…'**
+  String get paperGenerating;
+
+  /// Language chooser dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Paper language'**
+  String get paperLanguageTitle;
+
+  /// Language chooser dialog body
+  ///
+  /// In en, this message translates to:
+  /// **'Choose language for this practice paper. We’ll remember it for next time.'**
+  String get paperLanguageSubtitle;
+
+  /// English language option
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get paperLanguageEnglish;
+
+  /// Hindi language option
+  ///
+  /// In en, this message translates to:
+  /// **'Hindi'**
+  String get paperLanguageHindi;
+
+  /// Paper detail app bar
+  ///
+  /// In en, this message translates to:
+  /// **'Practice paper'**
+  String get paperDetailTitle;
+
+  /// Paper summary line
+  ///
+  /// In en, this message translates to:
+  /// **'{count} questions · {language}'**
+  String paperMeta(int count, String language);
+
+  /// Hint on paper detail before Phase 5 attempt UI
+  ///
+  /// In en, this message translates to:
+  /// **'Review questions below. Attempt & score come in the next phase.'**
+  String get paperViewHint;
 }
 
 class _AppLocalizationsDelegate

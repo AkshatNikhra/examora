@@ -1,9 +1,11 @@
-"""Lightweight column adds for local Postgres (no Alembic yet)."""
+"""Lightweight column/table ensures for local Postgres (no Alembic yet)."""
 
 from __future__ import annotations
 
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
+
+from app.core.database import Base
 
 
 _NOTE_COLUMNS: list[tuple[str, str]] = [
@@ -14,24 +16,37 @@ _NOTE_COLUMNS: list[tuple[str, str]] = [
     ("processed_at", "TIMESTAMPTZ"),
 ]
 
+_USER_COLUMNS: list[tuple[str, str]] = [
+    ("preferred_paper_language", "VARCHAR(8)"),
+]
 
-def ensure_note_processing_columns(engine: Engine) -> None:
-    """Add Phase 3 Note columns if missing (Postgres + SQLite)."""
+
+def _add_columns(engine: Engine, table: str, columns: list[tuple[str, str]]) -> None:
     dialect = engine.dialect.name
     with engine.begin() as conn:
-        for name, sql_type in _NOTE_COLUMNS:
+        for name, sql_type in columns:
             if dialect == "postgresql":
                 conn.execute(
                     text(
-                        f"ALTER TABLE notes ADD COLUMN IF NOT EXISTS {name} {sql_type}"
+                        f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {name} {sql_type}"
                     )
                 )
             elif dialect == "sqlite":
-                rows = conn.execute(text("PRAGMA table_info(notes)")).fetchall()
+                rows = conn.execute(text(f"PRAGMA table_info({table})")).fetchall()
                 existing = {row[1] for row in rows}
                 if name not in existing:
-                    # SQLite has no TIMESTAMPTZ; use TEXT-compatible DATETIME
                     sqlite_type = "TEXT" if sql_type == "TIMESTAMPTZ" else sql_type
                     conn.execute(
-                        text(f"ALTER TABLE notes ADD COLUMN {name} {sqlite_type}")
+                        text(f"ALTER TABLE {table} ADD COLUMN {name} {sqlite_type}")
                     )
+
+
+def ensure_note_processing_columns(engine: Engine) -> None:
+    """Add Phase 3 Note columns if missing (Postgres + SQLite)."""
+    _add_columns(engine, "notes", _NOTE_COLUMNS)
+
+
+def ensure_phase4_schema(engine: Engine) -> None:
+    """Add Phase 4 user column + create paper/question tables if missing."""
+    _add_columns(engine, "users", _USER_COLUMNS)
+    Base.metadata.create_all(bind=engine)

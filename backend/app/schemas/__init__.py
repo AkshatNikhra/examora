@@ -10,7 +10,12 @@ class UserResponse(BaseModel):
 
     id: str
     phone: str
+    preferred_paper_language: str | None = None
     created_at: datetime
+
+
+class UserPreferenceUpdate(BaseModel):
+    preferred_paper_language: str = Field(..., pattern="^(en|hi)$")
 
 
 class NoteResponse(BaseModel):
@@ -79,3 +84,37 @@ class NoteStatusResponse(BaseModel):
         default=None,
         description="First ~240 chars of raw PDF extract when available",
     )
+
+
+class GeneratePaperRequest(BaseModel):
+    language: str | None = Field(
+        default=None,
+        description="en or hi; required if user has no preferred_paper_language",
+    )
+
+
+class PaperQuestionResponse(BaseModel):
+    id: str
+    order_index: int
+    stem: str
+    options: list[str]
+    correct_index: int
+    explanation: str | None = None
+    topic: str | None = None
+    variant_group_id: str
+
+
+class PaperSummaryResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    note_id: str
+    title: str
+    language: str
+    status: str
+    question_count: int
+    created_at: datetime
+
+
+class PaperDetailResponse(PaperSummaryResponse):
+    questions: list[PaperQuestionResponse]

@@ -177,5 +177,45 @@
   "noteContentEmpty": "Not processed yet. Create a practice paper to run AI on this note.",
   "@noteContentEmpty": {
     "description": "Shown when extract/canonical text is missing"
+  },
+  "paperCreateCta": "Create practice paper",
+  "@paperCreateCta": {
+    "description": "Generate MCQ paper from ready note"
+  },
+  "paperGenerating": "Generating paper…",
+  "@paperGenerating": {
+    "description": "Shown while MCQ paper is generating"
+  },
+  "paperLanguageTitle": "Paper language",
+  "@paperLanguageTitle": {
+    "description": "Language chooser dialog title"
+  },
+  "paperLanguageSubtitle": "Choose language for this practice paper. We’ll remember it for next time.",
+  "@paperLanguageSubtitle": {
+    "description": "Language chooser dialog body"
+  },
+  "paperLanguageEnglish": "English",
+  "@paperLanguageEnglish": {
+    "description": "English language option"
+  },
+  "paperLanguageHindi": "Hindi",
+  "@paperLanguageHindi": {
+    "description": "Hindi language option"
+  },
+  "paperDetailTitle": "Practice paper",
+  "@paperDetailTitle": {
+    "description": "Paper detail app bar"
+  },
+  "paperMeta": "{count} questions · {language}",
+  "@paperMeta": {
+    "description": "Paper summary line",
+    "placeholders": {
+      "count": {"type": "int"},
+      "language": {"type": "String"}
+    }
+  },
+  "paperViewHint": "Review questions below. Attempt & score come in the next phase.",
+  "@paperViewHint": {
+    "description": "Hint on paper detail before Phase 5 attempt UI"
   }
 }

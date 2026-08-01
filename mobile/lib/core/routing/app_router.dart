@@ -9,6 +9,7 @@ import '../../features/auth/presentation/phone_login_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/notes/presentation/note_detail_screen.dart';
 import '../../features/notes/presentation/notes_list_screen.dart';
+import '../../features/papers/presentation/paper_detail_screen.dart';
 import 'go_router_refresh.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -77,6 +78,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final noteId = state.pathParameters['noteId'] ?? '';
           return NoteDetailScreen(noteId: noteId);
+        },
+      ),
+      GoRoute(
+        path: '/papers/:paperId',
+        name: 'paperDetail',
+        builder: (context, state) {
+          final paperId = state.pathParameters['paperId'] ?? '';
+          return PaperDetailScreen(paperId: paperId);
         },
       ),
     ],

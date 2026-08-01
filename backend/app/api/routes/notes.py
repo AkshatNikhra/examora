@@ -7,8 +7,16 @@ from app.core.config import settings
 from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.models import Note, NoteStatus, User
-from app.schemas import NoteDetailResponse, NoteResponse, NoteStatusResponse
+from app.schemas import (
+    GeneratePaperRequest,
+    NoteDetailResponse,
+    NoteResponse,
+    NoteStatusResponse,
+    PaperDetailResponse,
+    PaperQuestionResponse,
+)
 from app.services import note_processing, notes as notes_service
+from app.services import papers as papers_service
 
 router = APIRouter(prefix="/notes", tags=["notes"])
 
@@ -96,6 +104,51 @@ def process_note(
         return _to_response(note)
     background_tasks.add_task(note_processing.process_note_job, note.id)
     return _to_response(note)
+
+
+@router.post("/{note_id}/generate-paper", response_model=PaperDetailResponse)
+def generate_paper(
+    note_id: str,
+    body: GeneratePaperRequest | None = None,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> PaperDetailResponse:
+    language = body.language if body else None
+    paper = papers_service.generate_paper_for_note(
+        db,
+        user=current_user,
+        note_id=note_id,
+        language=language,
+    )
+    rows = papers_service.list_paper_questions(db, paper_id=paper.id)
+    questions = [
+        PaperQuestionResponse(
+            id=question.id,
+            order_index=link.order_index,
+            stem=question.stem,
+            options=[
+                question.option_a,
+                question.option_b,
+                question.option_c,
+                question.option_d,
+            ],
+            correct_index=question.correct_index,
+            explanation=question.explanation,
+            topic=question.topic,
+            variant_group_id=question.variant_group_id,
+        )
+        for link, question in rows
+    ]
+    return PaperDetailResponse(
+        id=paper.id,
+        note_id=paper.note_id,
+        title=paper.title,
+        language=paper.language,
+        status=paper.status,
+        question_count=paper.question_count,
+        created_at=paper.created_at,
+        questions=questions,
+    )
 
 
 @router.get("/{note_id}", response_model=NoteDetailResponse)

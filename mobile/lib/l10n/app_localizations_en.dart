@@ -144,4 +144,35 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noteContentEmpty =>
       'Not processed yet. Create a practice paper to run AI on this note.';
+
+  @override
+  String get paperCreateCta => 'Create practice paper';
+
+  @override
+  String get paperGenerating => 'Generating paper…';
+
+  @override
+  String get paperLanguageTitle => 'Paper language';
+
+  @override
+  String get paperLanguageSubtitle =>
+      'Choose language for this practice paper. We’ll remember it for next time.';
+
+  @override
+  String get paperLanguageEnglish => 'English';
+
+  @override
+  String get paperLanguageHindi => 'Hindi';
+
+  @override
+  String get paperDetailTitle => 'Practice paper';
+
+  @override
+  String paperMeta(int count, String language) {
+    return '$count questions · $language';
+  }
+
+  @override
+  String get paperViewHint =>
+      'Review questions below. Attempt & score come in the next phase.';
 }
