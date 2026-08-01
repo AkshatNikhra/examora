@@ -20,6 +20,7 @@ dependencies:
   firebase_auth: ^5.6.2
   file_picker: ^10.1.9
   intl: any
+  google_fonts: ^6.2.1
 
 dev_dependencies:
   flutter_test:

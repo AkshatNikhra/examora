@@ -1,6 +1,6 @@
 """Exam and batch-folder endpoints."""
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -12,6 +12,7 @@ from app.schemas import (
     ExamCreate,
     ExamResponse,
     ExamUploadHintResponse,
+    GenerateFromTopicsRequest,
     GeneratePaperRequest,
     NoteResponse,
     PaperDetailResponse,
@@ -29,6 +30,7 @@ def _exam_response(db: Session, exam) -> ExamResponse:
         name=exam.name,
         created_at=exam.created_at,
         batch_count=exams_service.batch_count(db, exam_id=exam.id),
+        badge=getattr(exam, "badge", None),
     )
 
 
@@ -186,5 +188,32 @@ def generate_paper_from_batch(
         user=current_user,
         batch_id=batch_id,
         language=language,
+    )
+    return _paper_detail(db, paper)
+
+
+@router.post("/exams/{exam_id}/generate-paper", response_model=PaperDetailResponse)
+def generate_paper_from_topics(
+    exam_id: str,
+    body: GenerateFromTopicsRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> PaperDetailResponse:
+    exams_service.get_exam_for_user(db, exam_id=exam_id, user_id=current_user.id)
+    # Ensure every batch belongs to this exam
+    for bid in body.batch_ids:
+        batch = exams_service.get_batch_for_user(
+            db, batch_id=bid, user_id=current_user.id
+        )
+        if batch.exam_id != exam_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="All topics must belong to this exam",
+            )
+    paper = papers_service.generate_paper_for_batches(
+        db,
+        user=current_user,
+        batch_ids=body.batch_ids,
+        language=body.language,
     )
     return _paper_detail(db, paper)

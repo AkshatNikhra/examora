@@ -28,8 +28,39 @@ class User(Base):
 
     id: Mapped[str] = mapped_column(String(128), primary_key=True)
     phone: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    full_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    date_of_birth: Mapped[str | None] = mapped_column(
+        String(10),
+        nullable=True,
+    )  # YYYY-MM-DD
     preferred_paper_language: Mapped[str | None] = mapped_column(
         String(8),
+        nullable=True,
+    )
+    onboarding_completed: Mapped[int] = mapped_column(
+        Integer,
+        default=0,
+        nullable=False,
+    )  # 0/1 for SQLite ease
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+
+
+class ExamCatalogItem(Base):
+    """Shared exam names students can pick (popular + user-added)."""
+
+    __tablename__ = "exam_catalog"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    badge: Mapped[str] = mapped_column(String(32), nullable=False)
+    is_popular: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    created_by_user_id: Mapped[str | None] = mapped_column(
+        String(128),
+        ForeignKey("users.id"),
         nullable=True,
     )
     created_at: Mapped[datetime] = mapped_column(
@@ -40,7 +71,7 @@ class User(Base):
 
 
 class Exam(Base):
-    """User-named exam they are preparing for (multi-exam supported)."""
+    """User exam they are preparing for (multi-exam supported)."""
 
     __tablename__ = "exams"
 
@@ -51,7 +82,14 @@ class Exam(Base):
         index=True,
         nullable=False,
     )
+    catalog_id: Mapped[str | None] = mapped_column(
+        String(36),
+        ForeignKey("exam_catalog.id"),
+        nullable=True,
+        index=True,
+    )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
+    badge: Mapped[str | None] = mapped_column(String(32), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -226,6 +264,26 @@ class PaperQuestion(Base):
         nullable=False,
     )
     order_index: Mapped[int] = mapped_column(Integer, nullable=False)
+
+
+class PaperBatchLink(Base):
+    """Topics (batches) included in a practice paper — supports multi-topic papers."""
+
+    __tablename__ = "paper_batch_links"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    paper_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("question_papers.id"),
+        index=True,
+        nullable=False,
+    )
+    batch_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("batch_folders.id"),
+        index=True,
+        nullable=False,
+    )
 
 
 class PaperAttempt(Base):

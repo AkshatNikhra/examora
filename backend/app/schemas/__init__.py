@@ -10,12 +10,51 @@ class UserResponse(BaseModel):
 
     id: str
     phone: str
+    full_name: str | None = None
+    date_of_birth: str | None = None
     preferred_paper_language: str | None = None
+    onboarding_completed: bool = False
     created_at: datetime
+
+    @classmethod
+    def from_user(cls, user: object) -> "UserResponse":
+        return cls(
+            id=user.id,  # type: ignore[attr-defined]
+            phone=user.phone,  # type: ignore[attr-defined]
+            full_name=getattr(user, "full_name", None),
+            date_of_birth=getattr(user, "date_of_birth", None),
+            preferred_paper_language=getattr(user, "preferred_paper_language", None),
+            onboarding_completed=bool(getattr(user, "onboarding_completed", 0)),
+            created_at=user.created_at,  # type: ignore[attr-defined]
+        )
 
 
 class UserPreferenceUpdate(BaseModel):
     preferred_paper_language: str = Field(..., pattern="^(en|hi)$")
+
+
+class OnboardingProfileRequest(BaseModel):
+    full_name: str = Field(..., min_length=1, max_length=255)
+    date_of_birth: str = Field(..., pattern=r"^\d{4}-\d{2}-\d{2}$")
+    preferred_paper_language: str = Field(..., pattern="^(en|hi)$")
+
+
+class OnboardingExamsRequest(BaseModel):
+    catalog_ids: list[str] = Field(default_factory=list)
+    custom_names: list[str] = Field(default_factory=list)
+
+
+class ExamCatalogItemResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    name: str
+    badge: str
+    is_popular: bool = False
+
+
+class ExamCatalogCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=255)
 
 
 class NoteResponse(BaseModel):
@@ -95,6 +134,14 @@ class GeneratePaperRequest(BaseModel):
     )
 
 
+class GenerateFromTopicsRequest(BaseModel):
+    batch_ids: list[str] = Field(..., min_length=1)
+    language: str | None = Field(
+        default=None,
+        description="en or hi; required if user has no preferred_paper_language",
+    )
+
+
 class PaperQuestionResponse(BaseModel):
     """Paper question for attempt UI — answers omitted until submit."""
 
@@ -168,6 +215,7 @@ class ExamResponse(BaseModel):
     name: str
     created_at: datetime
     batch_count: int = 0
+    badge: str | None = None
 
 
 class BatchFolderCreate(BaseModel):
@@ -190,3 +238,19 @@ class ExamUploadHintResponse(BaseModel):
     suggest_new_batch: bool
     reason: str | None = None
     batches_with_papers: list[str] = Field(default_factory=list)
+
+
+class HomeActivityItem(BaseModel):
+    kind: str
+    title: str
+    subtitle: str | None = None
+    at: datetime
+
+
+class HomeSummaryResponse(BaseModel):
+    full_name: str | None = None
+    exams_count: int = 0
+    tests_taken: int = 0
+    avg_score_percent: int | None = None
+    exams: list[ExamResponse] = Field(default_factory=list)
+    recent_activity: list[HomeActivityItem] = Field(default_factory=list)

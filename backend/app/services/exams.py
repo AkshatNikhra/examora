@@ -18,10 +18,13 @@ def create_exam(db: Session, *, user_id: str, name: str) -> Exam:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Exam name is required",
         )
+    from app.services.catalog import _badge_from_name
+
     exam = Exam(
         id=str(uuid.uuid4()),
         user_id=user_id,
         name=cleaned[:255],
+        badge=_badge_from_name(cleaned),
     )
     db.add(exam)
     db.commit()
@@ -102,6 +105,13 @@ def note_count_for_batch(db: Session, *, batch_id: str) -> int:
 
 
 def batch_has_paper(db: Session, *, batch_id: str) -> bool:
+    from app.models import PaperBatchLink
+
+    linked = db.scalars(
+        select(PaperBatchLink.id).where(PaperBatchLink.batch_id == batch_id).limit(1)
+    ).first()
+    if linked is not None:
+        return True
     stmt = (
         select(QuestionPaper.id)
         .where(

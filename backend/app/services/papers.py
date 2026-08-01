@@ -20,12 +20,14 @@ from app.models import (
     BatchFolder,
     Note,
     NoteStatus,
+    PaperBatchLink,
     PaperQuestion,
     PaperStatus,
     Question,
     QuestionPaper,
     User,
 )
+from app.services.note_processing import process_note
 from app.services.r2 import download_pdf
 
 logger = logging.getLogger(__name__)
@@ -201,10 +203,31 @@ def generate_paper_for_note(
     note = db.get(Note, note_id)
     if note is None or note.user_id != user.id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Note not found")
+
+    needs = note.status != NoteStatus.READY.value or not (
+        note.canonical_content_en or ""
+    ).strip()
+    if needs:
+        try:
+            process_note(db, note_id=note.id)
+        except HTTPException:
+            raise
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("Auto-process failed for note %s", note.id)
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"Failed to process note: {exc}",
+            ) from exc
+        note = db.get(Note, note_id)
+        if note is None or note.user_id != user.id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Note not found"
+            )
+
     if note.status != NoteStatus.READY.value:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Note must be Ready before creating a paper. Process notes first.",
+            detail="Note could not be prepared for a test. Check the upload and try again.",
         )
     canonical = (note.canonical_content_en or "").strip()
     if not canonical:
@@ -285,6 +308,15 @@ def generate_paper_for_note(
     db.add(paper)
     db.flush()
 
+    if note.batch_folder_id:
+        db.add(
+            PaperBatchLink(
+                id=str(uuid.uuid4()),
+                paper_id=paper.id,
+                batch_id=note.batch_folder_id,
+            )
+        )
+
     now = datetime.now(timezone.utc)
     for index, question in enumerate(selected):
         db.add(
@@ -311,29 +343,88 @@ def generate_paper_for_batch(
     batch_id: str,
     language: str | None = None,
 ) -> QuestionPaper:
-    batch = db.get(BatchFolder, batch_id)
-    if batch is None or batch.user_id != user.id:
+    return generate_paper_for_batches(
+        db,
+        user=user,
+        batch_ids=[batch_id],
+        language=language,
+    )
+
+
+def generate_paper_for_batches(
+    db: Session,
+    *,
+    user: User,
+    batch_ids: list[str],
+    language: str | None = None,
+) -> QuestionPaper:
+    """Create one paper from one or more topics; auto-process unprocessed notes first."""
+    ids = list(dict.fromkeys(bid for bid in batch_ids if bid))
+    if not ids:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Batch folder not found",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Select at least one topic",
         )
+
+    batches: list[BatchFolder] = []
+    exam_id: str | None = None
+    for bid in ids:
+        batch = db.get(BatchFolder, bid)
+        if batch is None or batch.user_id != user.id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Topic not found",
+            )
+        if exam_id is None:
+            exam_id = batch.exam_id
+        elif batch.exam_id != exam_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="All topics must belong to the same exam",
+            )
+        batches.append(batch)
 
     notes = list(
         db.scalars(
             select(Note)
-            .where(Note.batch_folder_id == batch.id, Note.user_id == user.id)
+            .where(Note.batch_folder_id.in_(ids), Note.user_id == user.id)
             .order_by(Note.created_at.asc())
         ).all()
     )
     if not notes:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Batch has no notes. Upload PDFs first.",
+            detail="Selected topics have no notes. Upload PDFs first.",
         )
 
     _enforce_quota(db, user_id=user.id)
     _enforce_batch_page_limit(notes)
 
+    # Auto-process any note that is not Ready (student never taps Process).
+    for note in notes:
+        needs = note.status != NoteStatus.READY.value or not (
+            note.canonical_content_en or ""
+        ).strip()
+        if needs:
+            try:
+                process_note(db, note_id=note.id)
+            except HTTPException:
+                raise
+            except Exception as exc:  # noqa: BLE001
+                logger.exception("Auto-process failed for note %s", note.id)
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail=f"Failed to process note “{note.title}”: {exc}",
+                ) from exc
+
+    # Re-load after processing
+    notes = list(
+        db.scalars(
+            select(Note)
+            .where(Note.batch_folder_id.in_(ids), Note.user_id == user.id)
+            .order_by(Note.created_at.asc())
+        ).all()
+    )
     ready = [
         n
         for n in notes
@@ -343,7 +434,7 @@ def generate_paper_for_batch(
     if not ready:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Process at least one note in this batch until Ready, then create a test.",
+            detail="Could not prepare notes for a test. Check uploads and try again.",
         )
 
     lang = _resolve_language(user, language)
@@ -360,7 +451,7 @@ def generate_paper_for_batch(
     try:
         generated = generate_mcqs_from_notes(canonical, output_language=lang)
     except Exception as exc:  # noqa: BLE001
-        logger.exception("MCQ generation failed for batch %s", batch_id)
+        logger.exception("MCQ generation failed for topics %s", ids)
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"Failed to generate MCQs: {exc}",
@@ -408,18 +499,32 @@ def generate_paper_for_batch(
             ),
         )
 
+    if len(batches) == 1:
+        title = f"Practice — {batches[0].name}"
+    else:
+        title = f"Practice — {len(batches)} topics"
+
     paper = QuestionPaper(
         id=str(uuid.uuid4()),
         user_id=user.id,
         note_id=primary.id,
-        batch_folder_id=batch.id,
+        batch_folder_id=batches[0].id,
         language=lang,
         status=PaperStatus.READY.value,
-        title=f"Practice — {batch.name}"[:255],
+        title=title[:255],
         question_count=len(selected),
     )
     db.add(paper)
     db.flush()
+
+    for batch in batches:
+        db.add(
+            PaperBatchLink(
+                id=str(uuid.uuid4()),
+                paper_id=paper.id,
+                batch_id=batch.id,
+            )
+        )
 
     now = datetime.now(timezone.utc)
     for index, question in enumerate(selected):

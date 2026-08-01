@@ -163,18 +163,6 @@ class _BatchDetailScreenState extends ConsumerState<BatchDetailScreen> {
     }
   }
 
-  Future<void> _process(NoteItem note) async {
-    final l10n = AppLocalizations.of(context);
-    try {
-      await ref.read(notesRepositoryProvider).processNote(note.id);
-      ref.invalidate(batchNotesProvider(widget.batchId));
-    } catch (error) {
-      if (!mounted) return;
-      final message = error is AppFailure ? error.message : l10n.genericError;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-    }
-  }
-
   String _statusLabel(AppLocalizations l10n, String status) {
     return switch (status) {
       'processing' => l10n.notesStatusProcessing,
@@ -292,13 +280,7 @@ class _BatchDetailScreenState extends ConsumerState<BatchDetailScreen> {
                             child: ListTile(
                               title: Text(note.title),
                               subtitle: Text(_statusLabel(l10n, note.status)),
-                              trailing: note.status == 'uploaded' ||
-                                      note.status == 'failed'
-                                  ? TextButton(
-                                      onPressed: () => _process(note),
-                                      child: Text(l10n.noteStartProcess),
-                                    )
-                                  : const Icon(Icons.chevron_right),
+                              trailing: const Icon(Icons.chevron_right),
                               onTap: () => context.push('/notes/${note.id}'),
                             ),
                           ),

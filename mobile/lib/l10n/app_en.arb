@@ -148,12 +148,17 @@
   },
   "noteStartProcess": "Process notes",
   "@noteStartProcess": {
-    "description": "Button to start AI processing on a saved note"
+    "description": "Internal/admin process label (hidden from student flow)"
   },
-  "noteProcessHint": "This note is saved only. Tap Process notes to run AI (uses your monthly quota later).",
+  "noteProcessHint": "Uploaded. Create a practice test from this topic to run AI and generate questions.",
   "@noteProcessHint": {
     "description": "Hint shown on uploaded note before processing"
   },
+  "noteAwaitingProcess": "Waiting for practice test — AI runs when you create a test from the topic.",
+  "@noteAwaitingProcess": {
+    "description": "Status hint when note is uploaded but not processed"
+  },
+
   "noteDetailTitle": "Note details",
   "@noteDetailTitle": {
     "description": "Note detail screen app bar"
@@ -174,10 +179,11 @@
   "@noteCanonicalSubtitle": {
     "description": "Canonical English section subtitle"
   },
-  "noteContentEmpty": "Not processed yet. Create a practice paper to run AI on this note.",
+  "noteContentEmpty": "Not processed yet. Create a practice test from the topic to run AI.",
   "@noteContentEmpty": {
     "description": "Shown when extract/canonical text is missing"
   },
+
   "paperCreateCta": "Create practice paper",
   "@paperCreateCta": {
     "description": "Generate MCQ paper from ready note"
@@ -341,7 +347,7 @@
   "@examsAddConfirm": {
     "description": "Confirm add exam"
   },
-  "examsBatchCount": "{count} upload batches",
+  "examsBatchCount": "{count} topics",
   "@examsBatchCount": {
     "description": "Exam list subtitle",
     "placeholders": {
@@ -352,41 +358,41 @@
   "@examDetailTitle": {
     "description": "Fallback exam detail title"
   },
-  "batchListTitle": "Upload batches",
+  "batchListTitle": "Topics",
   "@batchListTitle": {
-    "description": "Batches section title"
+    "description": "Topics section title"
   },
-  "batchListEmpty": "No batches yet. Create one (e.g. “a”) and upload notes into it.",
+  "batchListEmpty": "No topics yet. Create one (e.g. Constitution) and upload notes into it.",
   "@batchListEmpty": {
-    "description": "Empty batches"
+    "description": "Empty topics"
   },
-  "batchCreateCta": "New batch",
+  "batchCreateCta": "New topic",
   "@batchCreateCta": {
-    "description": "Create batch FAB"
+    "description": "Create topic FAB"
   },
-  "batchCreateTitle": "New upload batch",
+  "batchCreateTitle": "New topic",
   "@batchCreateTitle": {
-    "description": "Create batch dialog title"
+    "description": "Create topic dialog title"
   },
   "batchCreateConfirm": "Create",
   "@batchCreateConfirm": {
-    "description": "Confirm create batch"
+    "description": "Confirm create topic"
   },
-  "batchNameLabel": "Batch name",
+  "batchNameLabel": "Topic name",
   "@batchNameLabel": {
-    "description": "Batch name field"
+    "description": "Topic name field"
   },
-  "batchNameHint": "e.g. a, Week 1",
+  "batchNameHint": "e.g. Polity, Week 1",
   "@batchNameHint": {
-    "description": "Batch name hint"
+    "description": "Topic name hint"
   },
-  "batchSuggestNew": "A test was already created from a batch. Prefer creating a new batch for new uploads.",
+  "batchSuggestNew": "A test was already created from a topic. Prefer creating a new topic for new uploads.",
   "@batchSuggestNew": {
     "description": "Fallback post-test nudge"
   },
   "batchMeta": "{notes} notes · {paperStatus}",
   "@batchMeta": {
-    "description": "Batch list subtitle",
+    "description": "Topic list subtitle",
     "placeholders": {
       "notes": {"type": "int"},
       "paperStatus": {"type": "String"}
@@ -394,30 +400,50 @@
   },
   "batchHasPaper": "test created",
   "@batchHasPaper": {
-    "description": "Batch has paper label"
+    "description": "Topic has paper label"
   },
   "batchNoPaper": "no test yet",
   "@batchNoPaper": {
-    "description": "Batch no paper label"
+    "description": "Topic no paper label"
   },
-  "batchDetailTitle": "Batch",
+  "batchDetailTitle": "Topic",
   "@batchDetailTitle": {
-    "description": "Fallback batch title"
+    "description": "Fallback topic title"
   },
-  "batchNotesTitle": "Notes in this batch",
+  "batchNotesTitle": "Notes in this topic",
   "@batchNotesTitle": {
-    "description": "Notes section in batch"
+    "description": "Notes section in topic"
   },
-  "batchNotesEmpty": "Upload PDFs into this batch (max 20 pages total for a test).",
+  "batchNotesEmpty": "Upload PDFs into this topic (max 20 pages total for a test).",
   "@batchNotesEmpty": {
-    "description": "Empty batch notes"
+    "description": "Empty topic notes"
   },
   "batchCreateTestCta": "Create practice test",
   "@batchCreateTestCta": {
-    "description": "Generate paper from batch"
+    "description": "Generate paper from topic"
   },
-  "batchCreateTestHint": "Uses Ready notes in this batch. Process uploaded notes first if needed.",
+  "batchCreateTestHint": "Processes any unprocessed notes in this topic, then creates a test from all notes.",
   "@batchCreateTestHint": {
     "description": "Hint under create test"
+  },
+  "topicsSelectHint": "Select one or more topics to combine into a single practice test.",
+  "@topicsSelectHint": {
+    "description": "Multi-topic select hint on exam detail"
+  },
+  "topicsCreateTestCta": "Create practice test",
+  "@topicsCreateTestCta": {
+    "description": "Generate paper from selected topics"
+  },
+  "topicsCreateTestSelected": "Create test ({count})",
+  "@topicsCreateTestSelected": {
+    "description": "Generate from N selected topics",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "topicsSelectNone": "Select at least one topic",
+  "@topicsSelectNone": {
+    "description": "Snack when no topics selected"
   }
 }
+

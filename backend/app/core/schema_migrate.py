@@ -19,6 +19,14 @@ _NOTE_COLUMNS: list[tuple[str, str]] = [
 
 _USER_COLUMNS: list[tuple[str, str]] = [
     ("preferred_paper_language", "VARCHAR(8)"),
+    ("full_name", "VARCHAR(255)"),
+    ("date_of_birth", "VARCHAR(10)"),
+    ("onboarding_completed", "INTEGER"),
+]
+
+_EXAM_COLUMNS: list[tuple[str, str]] = [
+    ("catalog_id", "VARCHAR(36)"),
+    ("badge", "VARCHAR(32)"),
 ]
 
 _PAPER_COLUMNS: list[tuple[str, str]] = [
@@ -87,3 +95,33 @@ def ensure_phase4b_schema(engine: Engine) -> None:
     _add_columns(engine, "notes", [("batch_folder_id", "VARCHAR(36)")])
     _add_columns(engine, "question_papers", _PAPER_COLUMNS)
     _make_paper_note_id_nullable(engine)
+
+
+def ensure_phase6_schema(engine: Engine) -> None:
+    """Profile fields, exam catalog, exam badge/catalog_id."""
+    Base.metadata.create_all(bind=engine)
+    _add_columns(engine, "users", _USER_COLUMNS)
+    _add_columns(engine, "exams", _EXAM_COLUMNS)
+    # Existing users who already have exams skip onboarding.
+    dialect = engine.dialect.name
+    with engine.begin() as conn:
+        if dialect == "postgresql":
+            conn.execute(
+                text(
+                    """
+                    UPDATE users SET onboarding_completed = 1
+                    WHERE id IN (SELECT DISTINCT user_id FROM exams)
+                      AND COALESCE(onboarding_completed, 0) = 0
+                    """
+                )
+            )
+        elif dialect == "sqlite":
+            conn.execute(
+                text(
+                    """
+                    UPDATE users SET onboarding_completed = 1
+                    WHERE id IN (SELECT DISTINCT user_id FROM exams)
+                      AND IFNULL(onboarding_completed, 0) = 0
+                    """
+                )
+            )

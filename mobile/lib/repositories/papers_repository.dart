@@ -210,7 +210,7 @@ class PapersRepository {
         '/notes/$noteId/generate-paper',
         data: {'language': language},
         options: Options(
-          receiveTimeout: const Duration(seconds: 120),
+          receiveTimeout: const Duration(seconds: 240),
           sendTimeout: const Duration(seconds: 30),
         ),
       );
@@ -236,7 +236,37 @@ class PapersRepository {
         '/batches/$batchId/generate-paper',
         data: {'language': language},
         options: Options(
-          receiveTimeout: const Duration(seconds: 120),
+          receiveTimeout: const Duration(seconds: 240),
+          sendTimeout: const Duration(seconds: 30),
+        ),
+      );
+      final data = response.data;
+      if (data == null) {
+        throw const ServerFailure('Empty paper response');
+      }
+      return PaperDetail.fromJson(data);
+    } on DioException catch (error) {
+      throw NetworkFailure(_dioMessage(error));
+    } catch (error) {
+      if (error is AppFailure) rethrow;
+      throw UnexpectedFailure(error.toString());
+    }
+  }
+
+  Future<PaperDetail> generatePaperFromTopics({
+    required String examId,
+    required List<String> batchIds,
+    required String language,
+  }) async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/exams/$examId/generate-paper',
+        data: {
+          'batch_ids': batchIds,
+          'language': language,
+        },
+        options: Options(
+          receiveTimeout: const Duration(seconds: 240),
           sendTimeout: const Duration(seconds: 30),
         ),
       );

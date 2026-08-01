@@ -122,7 +122,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noteProcessHint =>
-      'This note is saved only. Tap Process notes to run AI (uses your monthly quota later).';
+      'Uploaded. Create a practice test from this topic to run AI and generate questions.';
+
+  @override
+  String get noteAwaitingProcess =>
+      'Waiting for practice test — AI runs when you create a test from the topic.';
 
   @override
   String get noteDetailTitle => 'Note details';
@@ -143,7 +147,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noteContentEmpty =>
-      'Not processed yet. Create a practice paper to run AI on this note.';
+      'Not processed yet. Create a practice test from the topic to run AI.';
 
   @override
   String get paperCreateCta => 'Create practice paper';
@@ -272,37 +276,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String examsBatchCount(int count) {
-    return '$count upload batches';
+    return '$count topics';
   }
 
   @override
   String get examDetailTitle => 'Exam';
 
   @override
-  String get batchListTitle => 'Upload batches';
+  String get batchListTitle => 'Topics';
 
   @override
   String get batchListEmpty =>
-      'No batches yet. Create one (e.g. “a”) and upload notes into it.';
+      'No topics yet. Create one (e.g. Constitution) and upload notes into it.';
 
   @override
-  String get batchCreateCta => 'New batch';
+  String get batchCreateCta => 'New topic';
 
   @override
-  String get batchCreateTitle => 'New upload batch';
+  String get batchCreateTitle => 'New topic';
 
   @override
   String get batchCreateConfirm => 'Create';
 
   @override
-  String get batchNameLabel => 'Batch name';
+  String get batchNameLabel => 'Topic name';
 
   @override
-  String get batchNameHint => 'e.g. a, Week 1';
+  String get batchNameHint => 'e.g. Polity, Week 1';
 
   @override
   String get batchSuggestNew =>
-      'A test was already created from a batch. Prefer creating a new batch for new uploads.';
+      'A test was already created from a topic. Prefer creating a new topic for new uploads.';
 
   @override
   String batchMeta(int notes, String paperStatus) {
@@ -316,19 +320,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get batchNoPaper => 'no test yet';
 
   @override
-  String get batchDetailTitle => 'Batch';
+  String get batchDetailTitle => 'Topic';
 
   @override
-  String get batchNotesTitle => 'Notes in this batch';
+  String get batchNotesTitle => 'Notes in this topic';
 
   @override
   String get batchNotesEmpty =>
-      'Upload PDFs into this batch (max 20 pages total for a test).';
+      'Upload PDFs into this topic (max 20 pages total for a test).';
 
   @override
   String get batchCreateTestCta => 'Create practice test';
 
   @override
   String get batchCreateTestHint =>
-      'Uses Ready notes in this batch. Process uploaded notes first if needed.';
+      'Processes any unprocessed notes in this topic, then creates a test from all notes.';
+
+  @override
+  String get topicsSelectHint =>
+      'Select one or more topics to combine into a single practice test.';
+
+  @override
+  String get topicsCreateTestCta => 'Create practice test';
+
+  @override
+  String topicsCreateTestSelected(int count) {
+    return 'Create test ($count)';
+  }
+
+  @override
+  String get topicsSelectNone => 'Select at least one topic';
 }

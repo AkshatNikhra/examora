@@ -26,7 +26,6 @@ class NoteDetailScreen extends ConsumerStatefulWidget {
 
 class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
   Timer? _pollTimer;
-  bool _starting = false;
   bool _generating = false;
 
   @override
@@ -46,22 +45,6 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
     } else {
       _pollTimer?.cancel();
       _pollTimer = null;
-    }
-  }
-
-  Future<void> _startProcess() async {
-    final l10n = AppLocalizations.of(context);
-    setState(() => _starting = true);
-    try {
-      await ref.read(notesRepositoryProvider).processNote(widget.noteId);
-      ref.invalidate(noteDetailProvider(widget.noteId));
-      ref.invalidate(notesListProvider);
-    } catch (error) {
-      if (!mounted) return;
-      final message = error is AppFailure ? error.message : l10n.genericError;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-    } finally {
-      if (mounted) setState(() => _starting = false);
     }
   }
 
@@ -153,24 +136,9 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
                 if (note.status == 'uploaded') ...[
                   const SizedBox(height: 16),
                   Text(
-                    l10n.noteProcessHint,
+                    l10n.noteAwaitingProcess,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: FilledButton.icon(
-                      onPressed: _starting ? null : _startProcess,
-                      icon: _starting
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.auto_awesome),
-                      label: Text(l10n.noteStartProcess),
                     ),
                   ),
                 ],
@@ -183,11 +151,10 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: FilledButton(
-                      onPressed: _starting ? null : _startProcess,
-                      child: Text(l10n.notesRetryProcess),
+                  Text(
+                    l10n.noteProcessHint,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -197,7 +164,9 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
                   const SizedBox(height: 8),
                   Text(l10n.notesStatusProcessing),
                 ],
-                if (note.status == 'ready') ...[
+                if (note.status == 'ready' ||
+                    note.status == 'uploaded' ||
+                    note.status == 'failed') ...[
                   const SizedBox(height: 16),
                   Align(
                     alignment: Alignment.centerLeft,

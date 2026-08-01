@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/errors/app_failure.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../repositories/exams_repository.dart';
+import '../../../repositories/papers_repository.dart';
 import 'exams_list_screen.dart';
 
 final examDetailProvider =
@@ -22,14 +23,22 @@ final examUploadHintProvider =
   return ref.watch(examsRepositoryProvider).uploadHint(examId);
 });
 
-class ExamDetailScreen extends ConsumerWidget {
+class ExamDetailScreen extends ConsumerStatefulWidget {
   const ExamDetailScreen({super.key, required this.examId});
 
   final String examId;
 
-  Future<void> _createBatch(BuildContext context, WidgetRef ref) async {
+  @override
+  ConsumerState<ExamDetailScreen> createState() => _ExamDetailScreenState();
+}
+
+class _ExamDetailScreenState extends ConsumerState<ExamDetailScreen> {
+  final Set<String> _selected = {};
+  bool _generating = false;
+
+  Future<void> _createBatch() async {
     final l10n = AppLocalizations.of(context);
-    final hint = ref.read(examUploadHintProvider(examId)).valueOrNull;
+    final hint = ref.read(examUploadHintProvider(widget.examId)).valueOrNull;
     final controller = TextEditingController();
     final name = await showDialog<String>(
       context: context,
@@ -71,27 +80,91 @@ class ExamDetailScreen extends ConsumerWidget {
     if (name == null || name.isEmpty) return;
     try {
       final batch = await ref.read(examsRepositoryProvider).createBatch(
-            examId: examId,
+            examId: widget.examId,
             name: name,
           );
-      ref.invalidate(examBatchesProvider(examId));
+      ref.invalidate(examBatchesProvider(widget.examId));
       ref.invalidate(examsListProvider);
-      ref.invalidate(examUploadHintProvider(examId));
-      if (context.mounted) context.push('/batches/${batch.id}');
+      ref.invalidate(examUploadHintProvider(widget.examId));
+      if (mounted) context.push('/batches/${batch.id}');
     } catch (error) {
-      if (!context.mounted) return;
+      if (!mounted) return;
       final message = error is AppFailure ? error.message : l10n.genericError;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
     }
   }
 
+  Future<String?> _pickLanguage() async {
+    final l10n = AppLocalizations.of(context);
+    return showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.paperLanguageTitle),
+        content: Text(l10n.paperLanguageSubtitle),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'en'),
+            child: Text(l10n.paperLanguageEnglish),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'hi'),
+            child: Text(l10n.paperLanguageHindi),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _createTestFromSelected() async {
+    final l10n = AppLocalizations.of(context);
+    if (_selected.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.topicsSelectNone)),
+      );
+      return;
+    }
+    final language = await _pickLanguage();
+    if (language == null || !mounted) return;
+
+    setState(() => _generating = true);
+    try {
+      final paper = await ref.read(papersRepositoryProvider).generatePaperFromTopics(
+            examId: widget.examId,
+            batchIds: _selected.toList(),
+            language: language,
+          );
+      ref.invalidate(examBatchesProvider(widget.examId));
+      ref.invalidate(examUploadHintProvider(widget.examId));
+      if (!mounted) return;
+      setState(() => _selected.clear());
+      context.push('/papers/${paper.id}');
+    } catch (error) {
+      if (!mounted) return;
+      final message = error is AppFailure ? error.message : l10n.genericError;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    } finally {
+      if (mounted) setState(() => _generating = false);
+    }
+  }
+
+  void _toggle(String id) {
+    setState(() {
+      if (_selected.contains(id)) {
+        _selected.remove(id);
+      } else {
+        _selected.add(id);
+      }
+    });
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final asyncExam = ref.watch(examDetailProvider(examId));
-    final asyncBatches = ref.watch(examBatchesProvider(examId));
-    final asyncHint = ref.watch(examUploadHintProvider(examId));
+    final asyncExam = ref.watch(examDetailProvider(widget.examId));
+    final asyncBatches = ref.watch(examBatchesProvider(widget.examId));
+    final asyncHint = ref.watch(examUploadHintProvider(widget.examId));
+    final selectedCount = _selected.length;
 
     return Scaffold(
       appBar: AppBar(
@@ -100,10 +173,37 @@ class ExamDetailScreen extends ConsumerWidget {
           orElse: () => Text(l10n.examDetailTitle),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _createBatch(context, ref),
-        icon: const Icon(Icons.create_new_folder_outlined),
-        label: Text(l10n.batchCreateCta),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          if (selectedCount > 0)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: FloatingActionButton.extended(
+                heroTag: 'create_test',
+                onPressed: _generating ? null : _createTestFromSelected,
+                icon: _generating
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.quiz_outlined),
+                label: Text(
+                  _generating
+                      ? l10n.paperGenerating
+                      : l10n.topicsCreateTestSelected(selectedCount),
+                ),
+              ),
+            ),
+          FloatingActionButton.extended(
+            heroTag: 'new_topic',
+            onPressed: _createBatch,
+            icon: const Icon(Icons.create_new_folder_outlined),
+            label: Text(l10n.batchCreateCta),
+          ),
+        ],
       ),
       body: asyncBatches.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -119,12 +219,12 @@ class ExamDetailScreen extends ConsumerWidget {
         data: (batches) {
           return RefreshIndicator(
             onRefresh: () async {
-              ref.invalidate(examBatchesProvider(examId));
-              ref.invalidate(examUploadHintProvider(examId));
-              await ref.read(examBatchesProvider(examId).future);
+              ref.invalidate(examBatchesProvider(widget.examId));
+              ref.invalidate(examUploadHintProvider(widget.examId));
+              await ref.read(examBatchesProvider(widget.examId).future);
             },
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 88),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 140),
               children: [
                 asyncHint.maybeWhen(
                   data: (hint) {
@@ -146,6 +246,15 @@ class ExamDetailScreen extends ConsumerWidget {
                   l10n.batchListTitle,
                   style: theme.textTheme.titleMedium,
                 ),
+                if (batches.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    l10n.topicsSelectHint,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 8),
                 if (batches.isEmpty)
                   Padding(
@@ -159,22 +268,30 @@ class ExamDetailScreen extends ConsumerWidget {
                   )
                 else
                   ...batches.map(
-                    (batch) => Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        title: Text(batch.name),
-                        subtitle: Text(
-                          l10n.batchMeta(
-                            batch.noteCount,
-                            batch.hasPaper
-                                ? l10n.batchHasPaper
-                                : l10n.batchNoPaper,
+                    (batch) {
+                      final selected = _selected.contains(batch.id);
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: ListTile(
+                          leading: Checkbox(
+                            value: selected,
+                            onChanged: (_) => _toggle(batch.id),
                           ),
+                          title: Text(batch.name),
+                          subtitle: Text(
+                            l10n.batchMeta(
+                              batch.noteCount,
+                              batch.hasPaper
+                                  ? l10n.batchHasPaper
+                                  : l10n.batchNoPaper,
+                            ),
+                          ),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () => context.push('/batches/${batch.id}'),
+                          onLongPress: () => _toggle(batch.id),
                         ),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () => context.push('/batches/${batch.id}'),
-                      ),
-                    ),
+                      );
+                    },
                   ),
               ],
             ),

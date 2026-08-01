@@ -298,7 +298,7 @@ abstract class AppLocalizations {
   /// **'Retry'**
   String get notesRetryProcess;
 
-  /// Button to start AI processing on a saved note
+  /// Internal/admin process label (hidden from student flow)
   ///
   /// In en, this message translates to:
   /// **'Process notes'**
@@ -307,8 +307,14 @@ abstract class AppLocalizations {
   /// Hint shown on uploaded note before processing
   ///
   /// In en, this message translates to:
-  /// **'This note is saved only. Tap Process notes to run AI (uses your monthly quota later).'**
+  /// **'Uploaded. Create a practice test from this topic to run AI and generate questions.'**
   String get noteProcessHint;
+
+  /// Status hint when note is uploaded but not processed
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for practice test — AI runs when you create a test from the topic.'**
+  String get noteAwaitingProcess;
 
   /// Note detail screen app bar
   ///
@@ -343,7 +349,7 @@ abstract class AppLocalizations {
   /// Shown when extract/canonical text is missing
   ///
   /// In en, this message translates to:
-  /// **'Not processed yet. Create a practice paper to run AI on this note.'**
+  /// **'Not processed yet. Create a practice test from the topic to run AI.'**
   String get noteContentEmpty;
 
   /// Generate MCQ paper from ready note
@@ -571,7 +577,7 @@ abstract class AppLocalizations {
   /// Exam list subtitle
   ///
   /// In en, this message translates to:
-  /// **'{count} upload batches'**
+  /// **'{count} topics'**
   String examsBatchCount(int count);
 
   /// Fallback exam detail title
@@ -580,91 +586,91 @@ abstract class AppLocalizations {
   /// **'Exam'**
   String get examDetailTitle;
 
-  /// Batches section title
+  /// Topics section title
   ///
   /// In en, this message translates to:
-  /// **'Upload batches'**
+  /// **'Topics'**
   String get batchListTitle;
 
-  /// Empty batches
+  /// Empty topics
   ///
   /// In en, this message translates to:
-  /// **'No batches yet. Create one (e.g. “a”) and upload notes into it.'**
+  /// **'No topics yet. Create one (e.g. Constitution) and upload notes into it.'**
   String get batchListEmpty;
 
-  /// Create batch FAB
+  /// Create topic FAB
   ///
   /// In en, this message translates to:
-  /// **'New batch'**
+  /// **'New topic'**
   String get batchCreateCta;
 
-  /// Create batch dialog title
+  /// Create topic dialog title
   ///
   /// In en, this message translates to:
-  /// **'New upload batch'**
+  /// **'New topic'**
   String get batchCreateTitle;
 
-  /// Confirm create batch
+  /// Confirm create topic
   ///
   /// In en, this message translates to:
   /// **'Create'**
   String get batchCreateConfirm;
 
-  /// Batch name field
+  /// Topic name field
   ///
   /// In en, this message translates to:
-  /// **'Batch name'**
+  /// **'Topic name'**
   String get batchNameLabel;
 
-  /// Batch name hint
+  /// Topic name hint
   ///
   /// In en, this message translates to:
-  /// **'e.g. a, Week 1'**
+  /// **'e.g. Polity, Week 1'**
   String get batchNameHint;
 
   /// Fallback post-test nudge
   ///
   /// In en, this message translates to:
-  /// **'A test was already created from a batch. Prefer creating a new batch for new uploads.'**
+  /// **'A test was already created from a topic. Prefer creating a new topic for new uploads.'**
   String get batchSuggestNew;
 
-  /// Batch list subtitle
+  /// Topic list subtitle
   ///
   /// In en, this message translates to:
   /// **'{notes} notes · {paperStatus}'**
   String batchMeta(int notes, String paperStatus);
 
-  /// Batch has paper label
+  /// Topic has paper label
   ///
   /// In en, this message translates to:
   /// **'test created'**
   String get batchHasPaper;
 
-  /// Batch no paper label
+  /// Topic no paper label
   ///
   /// In en, this message translates to:
   /// **'no test yet'**
   String get batchNoPaper;
 
-  /// Fallback batch title
+  /// Fallback topic title
   ///
   /// In en, this message translates to:
-  /// **'Batch'**
+  /// **'Topic'**
   String get batchDetailTitle;
 
-  /// Notes section in batch
+  /// Notes section in topic
   ///
   /// In en, this message translates to:
-  /// **'Notes in this batch'**
+  /// **'Notes in this topic'**
   String get batchNotesTitle;
 
-  /// Empty batch notes
+  /// Empty topic notes
   ///
   /// In en, this message translates to:
-  /// **'Upload PDFs into this batch (max 20 pages total for a test).'**
+  /// **'Upload PDFs into this topic (max 20 pages total for a test).'**
   String get batchNotesEmpty;
 
-  /// Generate paper from batch
+  /// Generate paper from topic
   ///
   /// In en, this message translates to:
   /// **'Create practice test'**
@@ -673,8 +679,32 @@ abstract class AppLocalizations {
   /// Hint under create test
   ///
   /// In en, this message translates to:
-  /// **'Uses Ready notes in this batch. Process uploaded notes first if needed.'**
+  /// **'Processes any unprocessed notes in this topic, then creates a test from all notes.'**
   String get batchCreateTestHint;
+
+  /// Multi-topic select hint on exam detail
+  ///
+  /// In en, this message translates to:
+  /// **'Select one or more topics to combine into a single practice test.'**
+  String get topicsSelectHint;
+
+  /// Generate paper from selected topics
+  ///
+  /// In en, this message translates to:
+  /// **'Create practice test'**
+  String get topicsCreateTestCta;
+
+  /// Generate from N selected topics
+  ///
+  /// In en, this message translates to:
+  /// **'Create test ({count})'**
+  String topicsCreateTestSelected(int count);
+
+  /// Snack when no topics selected
+  ///
+  /// In en, this message translates to:
+  /// **'Select at least one topic'**
+  String get topicsSelectNone;
 }
 
 class _AppLocalizationsDelegate

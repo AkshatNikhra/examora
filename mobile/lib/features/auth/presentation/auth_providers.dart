@@ -11,14 +11,3 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 final authStateProvider = StreamProvider<User?>((ref) {
   return ref.watch(authRepositoryProvider).authStateChanges();
 });
-
-/// Args passed from phone screen → OTP screen.
-class OtpRouteArgs {
-  const OtpRouteArgs({
-    required this.verificationId,
-    required this.phoneNumber,
-  });
-
-  final String verificationId;
-  final String phoneNumber;
-}

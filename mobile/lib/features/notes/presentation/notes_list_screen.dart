@@ -100,20 +100,6 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen> {
     }
   }
 
-  Future<void> _retryProcess(NoteItem note) async {
-    final l10n = AppLocalizations.of(context);
-    try {
-      await ref.read(notesRepositoryProvider).processNote(note.id);
-      ref.invalidate(notesListProvider);
-    } catch (error) {
-      if (!mounted) return;
-      final message = error is AppFailure ? error.message : l10n.genericError;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
-    }
-  }
-
   String _statusLabel(AppLocalizations l10n, String status) {
     return switch (status) {
       'processing' => l10n.notesStatusProcessing,
@@ -220,22 +206,12 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen> {
                               ],
                             ),
                             isThreeLine: note.status == 'failed',
-                            trailing: switch (note.status) {
-                              'failed' || 'uploaded' => TextButton(
-                                  onPressed: () => _retryProcess(note),
-                                  child: Text(
-                                    note.status == 'failed'
-                                        ? l10n.notesRetryProcess
-                                        : l10n.noteStartProcess,
-                                  ),
-                                ),
-                              _ => Text(
-                                  _shortDate(note.createdAt),
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: statusColor,
-                                  ),
-                                ),
-                            },
+                            trailing: Text(
+                              _shortDate(note.createdAt),
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: statusColor,
+                              ),
+                            ),
                           ),
                         );
                       },

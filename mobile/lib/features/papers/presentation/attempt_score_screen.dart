@@ -103,7 +103,7 @@ class _ScoreScaffold extends StatelessWidget {
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () => context.go('/papers'),
+                          onPressed: () => context.go('/app/tests'),
                           child: Text(l10n.attemptBackToPapers),
                         ),
                       ),

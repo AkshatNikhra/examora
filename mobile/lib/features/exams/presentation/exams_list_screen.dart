@@ -91,7 +91,7 @@ class ExamsListScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 16),
                     FilledButton(
-                      onPressed: () => context.go('/setup'),
+                      onPressed: () => context.go('/onboarding/exams'),
                       child: Text(l10n.setupExamContinue),
                     ),
                   ],
