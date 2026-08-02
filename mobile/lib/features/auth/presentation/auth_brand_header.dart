@@ -81,7 +81,20 @@ class AuthFormSheet extends StatelessWidget {
         ),
         child: SafeArea(
           top: false,
-          child: child,
+          // When the keyboard opens, available height shrinks. Scroll so the
+          // form Column + Spacer don't overflow ("Bottom Overflowed by N px").
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: IntrinsicHeight(child: child),
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
