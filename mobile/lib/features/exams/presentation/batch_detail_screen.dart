@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/errors/app_failure.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../features/notes/presentation/open_note_pdf.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../repositories/exams_repository.dart';
 import '../../../repositories/notes_repository.dart';
@@ -289,7 +290,12 @@ class _BatchDetailScreenState extends ConsumerState<BatchDetailScreen> {
                               title: Text(note.title),
                               subtitle: Text(_statusLabel(l10n, note.status)),
                               trailing: const Icon(Icons.chevron_right),
-                              onTap: () => context.push('/notes/${note.id}'),
+                              onTap: () => openNoteInPdfApp(
+                                context,
+                                ref,
+                                noteId: note.id,
+                                title: note.title,
+                              ),
                             ),
                           ),
                         ),

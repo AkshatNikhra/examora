@@ -3,11 +3,11 @@ import 'dart:async';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../core/errors/app_failure.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../repositories/notes_repository.dart';
+import 'open_note_pdf.dart';
 
 final notesListProvider = FutureProvider.autoDispose<List<NoteItem>>((ref) {
   return ref.watch(notesRepositoryProvider).listNotes();
@@ -179,8 +179,12 @@ class _NotesListScreenState extends ConsumerState<NotesListScreen> {
                         return Card(
                           child: ListTile(
                             onTap: () {
-                              // Path push (not named) — survives hot reload better
-                              context.push('/notes/${note.id}');
+                              openNoteInPdfApp(
+                                context,
+                                ref,
+                                noteId: note.id,
+                                title: note.title,
+                              );
                             },
                             title: Text(note.title),
                             subtitle: Column(

@@ -66,3 +66,23 @@ def download_pdf(*, key: str) -> bytes:
             detail="Downloaded PDF from R2 was empty",
         )
     return body
+
+
+def presign_pdf_get_url(*, key: str, expires_in: int = 300) -> str:
+    """Short-lived HTTPS URL so the mobile OS can open the PDF in an external app."""
+    client = get_r2_client()
+    try:
+        return client.generate_presigned_url(
+            "get_object",
+            Params={
+                "Bucket": settings.R2_BUCKET_NAME,
+                "Key": key,
+                "ResponseContentType": "application/pdf",
+            },
+            ExpiresIn=expires_in,
+        )
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Failed to create download URL: {exc}",
+        ) from exc

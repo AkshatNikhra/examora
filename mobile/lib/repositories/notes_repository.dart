@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../core/errors/app_failure.dart';
 import '../services/api_client.dart';
@@ -163,6 +166,42 @@ class NotesRepository {
         throw const ServerFailure('Empty process response');
       }
       return NoteItem.fromJson(data);
+    } on DioException catch (error) {
+      throw NetworkFailure(_dioMessage(error));
+    } catch (error) {
+      if (error is AppFailure) rethrow;
+      throw UnexpectedFailure(error.toString());
+    }
+  }
+
+  /// Downloads PDF bytes (auth) to a local temp file and returns the path.
+  Future<String> downloadNotePdfToTemp({
+    required String noteId,
+    required String title,
+  }) async {
+    try {
+      final response = await _dio.get<List<int>>(
+        '/notes/$noteId/file',
+        options: Options(
+          responseType: ResponseType.bytes,
+          receiveTimeout: const Duration(seconds: 120),
+        ),
+      );
+      final bytes = response.data;
+      if (bytes == null || bytes.isEmpty) {
+        throw const ServerFailure('Empty PDF download');
+      }
+
+      final dir = await getTemporaryDirectory();
+      final safe = title
+          .replaceAll(RegExp(r'[^\w\s\.-]'), '')
+          .trim()
+          .replaceAll(RegExp(r'\s+'), '_');
+      final name = (safe.isEmpty ? 'note' : safe);
+      final fileName = name.toLowerCase().endsWith('.pdf') ? name : '$name.pdf';
+      final file = File('${dir.path}/$fileName');
+      await file.writeAsBytes(bytes, flush: true);
+      return file.path;
     } on DioException catch (error) {
       throw NetworkFailure(_dioMessage(error));
     } catch (error) {

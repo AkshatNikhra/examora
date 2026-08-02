@@ -1,6 +1,7 @@
 """Notes upload, listing, and processing endpoints."""
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, UploadFile
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -9,7 +10,7 @@ from app.core.deps import get_current_user
 from app.models import Note, NoteStatus, User
 from app.schemas import (
     GeneratePaperRequest,
-    NoteDetailResponse,
+    NoteFileUrlResponse,
     NoteResponse,
     NoteStatusResponse,
     PaperDetailResponse,
@@ -17,16 +18,13 @@ from app.schemas import (
 )
 from app.services import note_processing, notes as notes_service
 from app.services import papers as papers_service
+from app.services.r2 import download_pdf, presign_pdf_get_url
 
 router = APIRouter(prefix="/notes", tags=["notes"])
 
 
 def _to_response(note: Note) -> NoteResponse:
     return NoteResponse.from_note(note)
-
-
-def _to_detail(note: Note) -> NoteDetailResponse:
-    return NoteDetailResponse.from_note(note)
 
 
 def _status_response(note: Note) -> NoteStatusResponse:
@@ -42,6 +40,14 @@ def _status_response(note: Note) -> NoteStatusResponse:
         canonical_preview=canonical[:240] if canonical else None,
         raw_preview=raw[:240] if raw else None,
     )
+
+
+def _safe_pdf_filename(title: str) -> str:
+    base = "".join(c for c in (title or "note").strip() if c.isalnum() or c in " ._-" )
+    base = base.strip() or "note"
+    if not base.lower().endswith(".pdf"):
+        base = f"{base}.pdf"
+    return base[:180]
 
 
 @router.post("", response_model=NoteResponse, status_code=201)
@@ -152,15 +158,60 @@ def generate_paper(
     )
 
 
-@router.get("/{note_id}", response_model=NoteDetailResponse)
-def get_note(
+@router.get("/{note_id}/file")
+def download_note_file(
     note_id: str,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> NoteDetailResponse:
+) -> Response:
+    """Authenticated PDF bytes — mobile saves locally and opens in the system PDF app."""
     note = notes_service.get_note_for_user(
         db,
         note_id=note_id,
         user_id=current_user.id,
     )
-    return _to_detail(note)
+    data = download_pdf(key=note.file_url)
+    filename = _safe_pdf_filename(note.title)
+    return Response(
+        content=data,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+        },
+    )
+
+
+@router.get("/{note_id}/file-url", response_model=NoteFileUrlResponse)
+def note_file_url(
+    note_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> NoteFileUrlResponse:
+    """Short-lived R2 URL (optional); prefer /file for reliable phone open)."""
+    note = notes_service.get_note_for_user(
+        db,
+        note_id=note_id,
+        user_id=current_user.id,
+    )
+    expires_in = 300
+    url = presign_pdf_get_url(key=note.file_url, expires_in=expires_in)
+    return NoteFileUrlResponse(
+        url=url,
+        expires_in=expires_in,
+        filename=_safe_pdf_filename(note.title),
+    )
+
+
+@router.get("/{note_id}", response_model=NoteResponse)
+def get_note(
+    note_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> NoteResponse:
+    """Metadata only — OCR / AI text is not exposed to students."""
+    note = notes_service.get_note_for_user(
+        db,
+        note_id=note_id,
+        user_id=current_user.id,
+    )
+    return _to_response(note)

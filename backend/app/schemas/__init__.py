@@ -98,20 +98,10 @@ class NoteResponse(BaseModel):
         )
 
 
-class NoteDetailResponse(NoteResponse):
-    """Full note including extracted PDF text and English canonical content."""
-
-    raw_extracted_text: str | None = None
-    canonical_content_en: str | None = None
-
-    @classmethod
-    def from_note(cls, note: object) -> "NoteDetailResponse":
-        base = NoteResponse.from_note(note)
-        return cls(
-            **base.model_dump(),
-            raw_extracted_text=getattr(note, "raw_extracted_text", None),
-            canonical_content_en=getattr(note, "canonical_content_en", None),
-        )
+class NoteFileUrlResponse(BaseModel):
+    url: str
+    expires_in: int = 300
+    filename: str
 
 
 class NoteStatusResponse(BaseModel):
