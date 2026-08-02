@@ -120,7 +120,7 @@ class _OnboardingExamsScreenState extends ConsumerState<OnboardingExamsScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+              padding: const EdgeInsets.fromLTRB(24, 36, 24, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -133,17 +133,21 @@ class _OnboardingExamsScreenState extends ConsumerState<OnboardingExamsScreen> {
                       letterSpacing: 1,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 20),
                   const Text(
                     'Which exam are you preparing for?',
                     style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   const Text(
                     'Select one or more. You can add more later.',
-                    style: TextStyle(color: AppTheme.muted),
+                    style: TextStyle(
+                      color: AppTheme.muted,
+                      fontSize: 15,
+                      height: 1.4,
+                    ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
                   TextField(
                     controller: _searchController,
                     decoration: InputDecoration(

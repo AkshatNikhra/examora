@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../l10n/app_localizations.dart';
+import 'auth_brand_header.dart';
 import 'auth_providers.dart';
 import 'otp_screen.dart';
 
@@ -23,6 +24,12 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   String? _error;
 
   @override
+  void initState() {
+    super.initState();
+    _phoneController.addListener(() => setState(() {}));
+  }
+
+  @override
   void dispose() {
     _phoneController.dispose();
     super.dispose();
@@ -31,6 +38,11 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   String get _e164Phone {
     final digits = _phoneController.text.replaceAll(RegExp(r'\D'), '');
     return '+91$digits';
+  }
+
+  bool get _isPhoneValid {
+    final digits = _phoneController.text.replaceAll(RegExp(r'\D'), '');
+    return digits.length == 10;
   }
 
   Future<void> _sendOtp() async {
@@ -72,218 +84,133 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       backgroundColor: AppTheme.navy,
       body: Column(
         children: [
-          SafeArea(
-            bottom: false,
+          const AuthBrandHeader(),
+          AuthFormSheet(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 28, 24, 32),
-              child: Column(
-                children: [
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.white54, width: 1.5),
+              padding: const EdgeInsets.fromLTRB(24, 28, 24, 16),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text(
+                      'Create your account',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.ink,
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.school_rounded,
-                      color: Colors.white,
-                      size: 34,
+                    const SizedBox(height: 6),
+                    const Text(
+                      "We'll send a 6-digit OTP to verify your number",
+                      style: TextStyle(color: AppTheme.muted, fontSize: 14),
                     ),
-                  ),
-                  const SizedBox(height: 14),
-                  const Text(
-                    'Examora',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 32,
-                      fontWeight: FontWeight.w800,
+                    const SizedBox(height: 24),
+                    const Text(
+                      'MOBILE NUMBER',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.8,
+                        color: Color(0xFF9A8570),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Notes → Practice Tests → Score',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.85),
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    alignment: WrapAlignment.center,
-                    children: const [
-                      _ExamPill('UPSC'),
-                      _ExamPill('SSC'),
-                      _ExamPill('JEE'),
-                      _ExamPill('NEET'),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Expanded(
-            child: Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                color: AppTheme.cream,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-              ),
-              child: SafeArea(
-                top: false,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 28, 24, 16),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Text(
-                          'Create your account',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w800,
-                            color: AppTheme.ink,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        const Text(
-                          "We'll send a 6-digit OTP to verify your number",
-                          style: TextStyle(color: AppTheme.muted, fontSize: 14),
-                        ),
-                        const SizedBox(height: 24),
-                        const Text(
-                          'MOBILE NUMBER',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.8,
-                            color: Color(0xFF9A8570),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        TextFormField(
-                          controller: _phoneController,
-                          keyboardType: TextInputType.phone,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            LengthLimitingTextInputFormatter(10),
-                          ],
-                          decoration: const InputDecoration(
-                            prefixIcon: Padding(
-                              padding: EdgeInsets.only(left: 12, right: 8),
-                              child: Text(
-                                'IN +91',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  color: AppTheme.ink,
-                                ),
-                              ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(10),
+                      ],
+                      decoration: const InputDecoration(
+                        prefixIcon: Padding(
+                          padding: EdgeInsets.only(left: 12, right: 8),
+                          child: Text(
+                            'IN +91',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.ink,
                             ),
-                            prefixIconConstraints: BoxConstraints(minWidth: 0),
-                            hintText: '10-digit number',
                           ),
-                          validator: (value) {
-                            final digits =
-                                (value ?? '').replaceAll(RegExp(r'\D'), '');
-                            if (digits.length != 10) {
-                              return 'Enter a valid 10-digit number';
-                            }
-                            return null;
-                          },
-                          onFieldSubmitted: (_) => _sendOtp(),
                         ),
-                        if (_error != null) ...[
-                          const SizedBox(height: 10),
-                          Text(
-                            _error!,
-                            style: const TextStyle(color: Colors.red),
-                          ),
-                        ],
-                        const SizedBox(height: 16),
-                        FilledButton(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: AppTheme.creamButton,
-                            foregroundColor: AppTheme.ink,
-                          ),
-                          onPressed: _isLoading ? null : _sendOtp,
-                          child: _isLoading
-                              ? const SizedBox(
-                                  height: 22,
-                                  width: 22,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.phone_iphone, size: 18),
-                                    SizedBox(width: 8),
-                                    Text('Send OTP'),
-                                  ],
-                                ),
-                        ),
-                        const SizedBox(height: 16),
-                        TextButton(
-                          onPressed: () => context.go('/signin'),
-                          child: const Text.rich(
-                            TextSpan(
-                              text: 'Already have an account? ',
-                              style: TextStyle(color: AppTheme.muted),
+                        prefixIconConstraints: BoxConstraints(minWidth: 0),
+                        hintText: '10-digit number',
+                      ),
+                      validator: (value) {
+                        final digits =
+                            (value ?? '').replaceAll(RegExp(r'\D'), '');
+                        if (digits.length != 10) {
+                          return 'Enter a valid 10-digit number';
+                        }
+                        return null;
+                      },
+                      onFieldSubmitted: (_) => _sendOtp(),
+                    ),
+                    if (_error != null) ...[
+                      const SizedBox(height: 10),
+                      Text(
+                        _error!,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    ],
+                    const SizedBox(height: 16),
+                    FilledButton(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppTheme.creamButton,
+                        foregroundColor: AppTheme.ink,
+                      ),
+                      onPressed:
+                          (_isLoading || !_isPhoneValid) ? null : _sendOtp,
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 22,
+                              width: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                TextSpan(
-                                  text: 'Sign in',
-                                  style: TextStyle(
-                                    color: AppTheme.navy,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
+                                Icon(Icons.phone_iphone, size: 18),
+                                SizedBox(width: 8),
+                                Text('Send OTP'),
                               ],
                             ),
-                          ),
-                        ),
-                        const Spacer(),
-                        const Text(
-                          'By continuing you agree to our Terms of Use and Privacy Policy',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 11, color: AppTheme.muted),
-                        ),
-                      ],
                     ),
-                  ),
+                    const SizedBox(height: 16),
+                    TextButton(
+                      onPressed: () => context.go('/signin'),
+                      child: const Text.rich(
+                        TextSpan(
+                          text: 'Already have an account? ',
+                          style: TextStyle(color: AppTheme.muted),
+                          children: [
+                            TextSpan(
+                              text: 'Sign in',
+                              style: TextStyle(
+                                color: AppTheme.navy,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    const Text(
+                      'By continuing you agree to our Terms of Use and Privacy Policy',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 11, color: AppTheme.muted),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ExamPill extends StatelessWidget {
-  const _ExamPill(this.label);
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white54),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
       ),
     );
   }

@@ -83,88 +83,132 @@ class _OnboardingProfileScreenState
       backgroundColor: AppTheme.cream,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+          padding: const EdgeInsets.fromLTRB(24, 40, 24, 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
-                'STEP 1 OF 2',
-                style: TextStyle(
-                  color: Color(0xFFE07A3D),
-                  fontWeight: FontWeight.w800,
-                  fontSize: 12,
-                  letterSpacing: 1,
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Text(
+                        'STEP 1 OF 2',
+                        style: TextStyle(
+                          color: Color(0xFFE07A3D),
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      const Text(
+                        'Tell us about you',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      const Text(
+                        'We’ll personalise your practice experience.',
+                        style: TextStyle(
+                          color: AppTheme.muted,
+                          fontSize: 15,
+                          height: 1.45,
+                        ),
+                      ),
+                      const SizedBox(height: 48),
+                      const Text(
+                        'YOUR DETAILS',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.8,
+                          color: AppTheme.muted,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: _nameController,
+                        textCapitalization: TextCapitalization.words,
+                        decoration: const InputDecoration(
+                          labelText: 'Full name',
+                          hintText: 'e.g. Rahul Kumar',
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+                      InkWell(
+                        onTap: _pickDob,
+                        borderRadius: BorderRadius.circular(14),
+                        child: InputDecorator(
+                          decoration: const InputDecoration(
+                            labelText: 'Date of birth',
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 2),
+                            child: Text(
+                              _dob == null
+                                  ? 'Select date'
+                                  : '${_dob!.day}/${_dob!.month}/${_dob!.year}',
+                              style: TextStyle(
+                                color: _dob == null
+                                    ? AppTheme.muted
+                                    : AppTheme.ink,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 44),
+                      const Text(
+                        'MCQ LANGUAGE',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.8,
+                          color: AppTheme.muted,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      const Text(
+                        'Preferred language for MCQs',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _LangChip(
+                              label: 'English',
+                              selected: _language == 'en',
+                              onTap: () => setState(() => _language = 'en'),
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: _LangChip(
+                              label: 'Hindi',
+                              selected: _language == 'hi',
+                              onTap: () => setState(() => _language = 'hi'),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'You can change this later from Profile.',
+                        style: TextStyle(color: AppTheme.muted, fontSize: 13),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 10),
-              const Text(
-                'Tell us about you',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'We’ll personalise your practice experience.',
-                style: TextStyle(color: AppTheme.muted),
-              ),
-              const SizedBox(height: 28),
-              TextField(
-                controller: _nameController,
-                textCapitalization: TextCapitalization.words,
-                decoration: const InputDecoration(
-                  labelText: 'Full name',
-                  hintText: 'e.g. Rahul Kumar',
-                ),
-              ),
-              const SizedBox(height: 14),
-              InkWell(
-                onTap: _pickDob,
-                borderRadius: BorderRadius.circular(14),
-                child: InputDecorator(
-                  decoration: const InputDecoration(
-                    labelText: 'Date of birth',
-                  ),
-                  child: Text(
-                    _dob == null
-                        ? 'Select date'
-                        : '${_dob!.day}/${_dob!.month}/${_dob!.year}',
-                    style: TextStyle(
-                      color: _dob == null ? AppTheme.muted : AppTheme.ink,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 18),
-              const Text(
-                'Preferred language for MCQs',
-                style: TextStyle(fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: _LangChip(
-                      label: 'English',
-                      selected: _language == 'en',
-                      onTap: () => setState(() => _language = 'en'),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _LangChip(
-                      label: 'Hindi',
-                      selected: _language == 'hi',
-                      onTap: () => setState(() => _language = 'hi'),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                'You can change this later from Settings.',
-                style: TextStyle(color: AppTheme.muted, fontSize: 13),
-              ),
-              const Spacer(),
               FilledButton(
                 onPressed: _saving ? null : _continue,
                 child: _saving
@@ -203,7 +247,7 @@ class _LangChip extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding: const EdgeInsets.symmetric(vertical: 18),
         decoration: BoxDecoration(
           color: selected ? AppTheme.navy.withValues(alpha: 0.08) : Colors.white,
           borderRadius: BorderRadius.circular(14),
