@@ -418,10 +418,10 @@ abstract class AppLocalizations {
   /// **'My Tests'**
   String get papersListTitle;
 
-  /// Empty papers list
+  /// Empty tests / topic folders list
   ///
   /// In en, this message translates to:
-  /// **'No papers yet. Open a Ready note and create a practice paper.'**
+  /// **'No tests yet. Create a practice test from a topic.'**
   String get papersListEmpty;
 
   /// Hint above attempt questions
@@ -601,13 +601,13 @@ abstract class AppLocalizations {
   /// Create topic FAB
   ///
   /// In en, this message translates to:
-  /// **'New topic'**
+  /// **'New Topic'**
   String get batchCreateCta;
 
   /// Create topic dialog title
   ///
   /// In en, this message translates to:
-  /// **'New topic'**
+  /// **'New Topic'**
   String get batchCreateTitle;
 
   /// Confirm create topic
@@ -628,7 +628,7 @@ abstract class AppLocalizations {
   /// **'e.g. Polity, Week 1'**
   String get batchNameHint;
 
-  /// Fallback post-test nudge
+  /// Fallback post-test nudge (unused in UI)
   ///
   /// In en, this message translates to:
   /// **'A test was already created from a topic. Prefer creating a new topic for new uploads.'**
@@ -637,16 +637,16 @@ abstract class AppLocalizations {
   /// Topic list subtitle
   ///
   /// In en, this message translates to:
-  /// **'{notes} notes · {paperStatus}'**
-  String batchMeta(int notes, String paperStatus);
+  /// **'{notes} notes'**
+  String batchMeta(int notes);
 
-  /// Topic has paper label
+  /// Topic has paper label (unused)
   ///
   /// In en, this message translates to:
   /// **'test created'**
   String get batchHasPaper;
 
-  /// Topic no paper label
+  /// Topic no paper label (unused)
   ///
   /// In en, this message translates to:
   /// **'no test yet'**
@@ -661,22 +661,22 @@ abstract class AppLocalizations {
   /// Notes section in topic
   ///
   /// In en, this message translates to:
-  /// **'Notes in this topic'**
+  /// **'Notes'**
   String get batchNotesTitle;
 
   /// Empty topic notes
   ///
   /// In en, this message translates to:
-  /// **'Upload PDFs into this topic (max 20 pages total for a test).'**
+  /// **'Upload PDF notes into this topic.'**
   String get batchNotesEmpty;
 
   /// Generate paper from topic
   ///
   /// In en, this message translates to:
-  /// **'Create practice test'**
+  /// **'Create Test'**
   String get batchCreateTestCta;
 
-  /// Hint under create test
+  /// Hint under create test (unused)
   ///
   /// In en, this message translates to:
   /// **'Processes any unprocessed notes in this topic, then creates a test from all notes.'**
@@ -685,19 +685,19 @@ abstract class AppLocalizations {
   /// Multi-topic select hint on exam detail
   ///
   /// In en, this message translates to:
-  /// **'Select one or more topics to combine into a single practice test.'**
+  /// **'Select topics to combine into one test.'**
   String get topicsSelectHint;
 
   /// Generate paper from selected topics
   ///
   /// In en, this message translates to:
-  /// **'Create practice test'**
+  /// **'Create Test'**
   String get topicsCreateTestCta;
 
   /// Generate from N selected topics
   ///
   /// In en, this message translates to:
-  /// **'Create test ({count})'**
+  /// **'Create Test ({count})'**
   String topicsCreateTestSelected(int count);
 
   /// Snack when no topics selected

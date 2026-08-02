@@ -173,6 +173,14 @@ class PaperSummaryResponse(BaseModel):
     created_at: datetime
 
 
+class TestTopicFolderResponse(BaseModel):
+    topic_id: str
+    topic_name: str
+    latest_test_at: datetime
+    test_count: int
+    tests: list[PaperSummaryResponse]
+
+
 class PaperDetailResponse(PaperSummaryResponse):
     questions: list[PaperQuestionResponse]
 

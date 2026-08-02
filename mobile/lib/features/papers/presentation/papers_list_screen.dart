@@ -7,11 +7,12 @@ import '../../../core/theme/app_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../repositories/papers_repository.dart';
 
-final papersListProvider =
-    FutureProvider.autoDispose<List<PaperSummary>>((ref) {
-  return ref.watch(papersRepositoryProvider).listPapers();
+final testTopicFoldersProvider =
+    FutureProvider.autoDispose<List<TestTopicFolder>>((ref) {
+  return ref.watch(papersRepositoryProvider).listTestTopicFolders();
 });
 
+/// Tests tab: topic folders that contain at least one test.
 class PapersListScreen extends ConsumerWidget {
   const PapersListScreen({super.key});
 
@@ -19,7 +20,7 @@ class PapersListScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final asyncPapers = ref.watch(papersListProvider);
+    final asyncFolders = ref.watch(testTopicFoldersProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.cream,
@@ -37,7 +38,7 @@ class PapersListScreen extends ConsumerWidget {
           fontWeight: FontWeight.w800,
         ),
       ),
-      body: asyncPapers.when(
+      body: asyncFolders.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
           child: Padding(
@@ -48,8 +49,8 @@ class PapersListScreen extends ConsumerWidget {
             ),
           ),
         ),
-        data: (papers) {
-          if (papers.isEmpty) {
+        data: (folders) {
+          if (folders.isEmpty) {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
@@ -67,15 +68,15 @@ class PapersListScreen extends ConsumerWidget {
 
           return RefreshIndicator(
             onRefresh: () async {
-              ref.invalidate(papersListProvider);
-              await ref.read(papersListProvider.future);
+              ref.invalidate(testTopicFoldersProvider);
+              await ref.read(testTopicFoldersProvider.future);
             },
             child: ListView.separated(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-              itemCount: papers.length,
+              itemCount: folders.length,
               separatorBuilder: (_, _) => const SizedBox(height: 10),
               itemBuilder: (context, index) {
-                final paper = papers[index];
+                final folder = folders[index];
                 return Material(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(14),
@@ -84,8 +85,13 @@ class PapersListScreen extends ConsumerWidget {
                       horizontal: 16,
                       vertical: 10,
                     ),
+                    leading: CircleAvatar(
+                      backgroundColor: AppTheme.navy.withValues(alpha: 0.1),
+                      foregroundColor: AppTheme.navy,
+                      child: const Icon(Icons.folder_outlined),
+                    ),
                     title: Text(
-                      paper.title,
+                      folder.topicName,
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
@@ -94,10 +100,9 @@ class PapersListScreen extends ConsumerWidget {
                     subtitle: Padding(
                       padding: const EdgeInsets.only(top: 4),
                       child: Text(
-                        l10n.paperMeta(
-                          paper.questionCount,
-                          paper.language.toUpperCase(),
-                        ),
+                        folder.testCount == 1
+                            ? '1 test'
+                            : '${folder.testCount} tests',
                         style: const TextStyle(
                           fontSize: 14,
                           color: AppTheme.muted,
@@ -105,7 +110,10 @@ class PapersListScreen extends ConsumerWidget {
                       ),
                     ),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () => context.push('/papers/${paper.id}'),
+                    onTap: () => context.push(
+                      '/app/tests/topics/${folder.topicId}',
+                      extra: folder,
+                    ),
                   ),
                 );
               },

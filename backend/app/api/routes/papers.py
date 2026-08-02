@@ -13,6 +13,7 @@ from app.schemas import (
     PaperDetailResponse,
     PaperQuestionResponse,
     PaperSummaryResponse,
+    TestTopicFolderResponse,
 )
 from app.services import attempts as attempts_service
 from app.services import papers as papers_service
@@ -30,6 +31,19 @@ def _summary(paper) -> PaperSummaryResponse:
         status=paper.status,
         question_count=paper.question_count,
         created_at=paper.created_at,
+    )
+
+
+def _summary_from_dict(data: dict) -> PaperSummaryResponse:
+    return PaperSummaryResponse(
+        id=data["id"],
+        note_id=data.get("note_id"),
+        batch_folder_id=data.get("batch_folder_id"),
+        title=data["title"],
+        language=data["language"],
+        status=data["status"],
+        question_count=data["question_count"],
+        created_at=data["created_at"],
     )
 
 
@@ -81,6 +95,24 @@ def list_papers(
 ) -> list[PaperSummaryResponse]:
     papers = papers_service.list_papers_for_user(db, user_id=current_user.id)
     return [_summary(p) for p in papers]
+
+
+@router.get("/topics", response_model=list[TestTopicFolderResponse])
+def list_test_topic_folders(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> list[TestTopicFolderResponse]:
+    folders = papers_service.list_test_topic_folders(db, user_id=current_user.id)
+    return [
+        TestTopicFolderResponse(
+            topic_id=f["topic_id"],
+            topic_name=f["topic_name"],
+            latest_test_at=f["latest_test_at"],
+            test_count=f["test_count"],
+            tests=[_summary_from_dict(t) for t in f["tests"]],
+        )
+        for f in folders
+    ]
 
 
 @router.get("/{paper_id}", response_model=PaperDetailResponse)

@@ -178,7 +178,7 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
                               height: 16,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Icon(Icons.quiz_outlined),
+                          : const Icon(Icons.ballot_outlined),
                       label: Text(
                         _generating
                             ? l10n.paperGenerating

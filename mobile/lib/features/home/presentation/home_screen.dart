@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -11,13 +13,35 @@ final homeSummaryProvider = FutureProvider.autoDispose<HomeSummary>((ref) {
   return ref.watch(meRepositoryProvider).fetchHomeSummary();
 });
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
+  @override
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  Timer? _greetingTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    // Rebuild periodically so greeting tracks local time of day.
+    _greetingTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _greetingTimer?.cancel();
+    super.dispose();
+  }
+
   String _greeting() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
+    final hour = DateTime.now().toLocal().hour;
+    if (hour >= 5 && hour < 12) return 'Good morning';
+    if (hour >= 12 && hour < 17) return 'Good afternoon';
     return 'Good evening';
   }
 
@@ -29,7 +53,7 @@ class HomeScreen extends ConsumerWidget {
   }
 
   String _relative(DateTime at) {
-    final diff = DateTime.now().difference(at.toLocal());
+    final diff = DateTime.now().toLocal().difference(at.toLocal());
     if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
     if (diff.inHours < 24) return '${diff.inHours}h ago';
     if (diff.inDays == 1) return 'Yesterday';
@@ -38,7 +62,7 @@ class HomeScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final async = ref.watch(homeSummaryProvider);
 
     return Scaffold(

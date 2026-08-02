@@ -38,6 +38,165 @@ def _content_hash(stem: str, options: list[str]) -> str:
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
+def _batch_ids_for_paper(db: Session, *, paper: QuestionPaper) -> frozenset[str]:
+    linked = list(
+        db.scalars(
+            select(PaperBatchLink.batch_id).where(PaperBatchLink.paper_id == paper.id)
+        ).all()
+    )
+    if linked:
+        return frozenset(str(bid) for bid in linked)
+    if paper.batch_folder_id:
+        return frozenset({paper.batch_folder_id})
+    return frozenset()
+
+
+def _build_paper_title(
+    db: Session,
+    *,
+    user_id: str,
+    batches: list[BatchFolder],
+) -> str:
+    """
+    Single topic → Test-1, Test-2, …
+    Multi topic  → MultiTopic-Test-1, MultiTopic-Test-2, … (one shared title on the paper)
+    """
+    batch_ids = frozenset(b.id for b in batches)
+    papers = list(
+        db.scalars(select(QuestionPaper).where(QuestionPaper.user_id == user_id)).all()
+    )
+    if len(batches) <= 1:
+        matching = sum(
+            1 for p in papers if _batch_ids_for_paper(db, paper=p) == batch_ids
+        )
+        return f"Test-{matching + 1}"
+    matching = sum(
+        1 for p in papers if len(_batch_ids_for_paper(db, paper=p)) > 1
+    )
+    return f"MultiTopic-Test-{matching + 1}"
+
+
+def _display_titles_for_papers(
+    db: Session,
+    *,
+    papers: list[QuestionPaper],
+) -> dict[str, str]:
+    """Canonical Test-N / MultiTopic-Test-N names by creation order (oldest = 1)."""
+    chronological = sorted(
+        papers,
+        key=lambda p: p.created_at or datetime.min.replace(tzinfo=timezone.utc),
+    )
+    titles: dict[str, str] = {}
+    multi_n = 0
+    single_n_by_batches: dict[frozenset[str], int] = defaultdict(int)
+    for paper in chronological:
+        batch_ids = _batch_ids_for_paper(db, paper=paper)
+        if len(batch_ids) > 1:
+            multi_n += 1
+            titles[paper.id] = f"MultiTopic-Test-{multi_n}"
+        else:
+            single_n_by_batches[batch_ids] += 1
+            titles[paper.id] = f"Test-{single_n_by_batches[batch_ids]}"
+    return titles
+
+
+def _canonicalize_user_paper_titles(db: Session, *, user_id: str) -> dict[str, str]:
+    """Rewrite stored titles so old 'Practice — …' papers match the new scheme."""
+    papers = list(
+        db.scalars(select(QuestionPaper).where(QuestionPaper.user_id == user_id)).all()
+    )
+    if not papers:
+        return {}
+    titles = _display_titles_for_papers(db, papers=papers)
+    changed = False
+    for paper in papers:
+        new_title = titles.get(paper.id)
+        if new_title and paper.title != new_title:
+            paper.title = new_title
+            db.add(paper)
+            changed = True
+    if changed:
+        db.commit()
+        for paper in papers:
+            db.refresh(paper)
+    return titles
+
+
+def list_test_topic_folders(db: Session, *, user_id: str) -> list[dict]:
+    """
+    Topic folders for Tests tab: only topics that have ≥1 paper.
+    Folders ordered by most recent paper, then name.
+    Papers inside each folder ordered newest first.
+    Multi-topic papers appear under every linked topic.
+    """
+    titles = _canonicalize_user_paper_titles(db, user_id=user_id)
+
+    papers = list(
+        db.scalars(
+            select(QuestionPaper)
+            .where(
+                QuestionPaper.user_id == user_id,
+                QuestionPaper.status == PaperStatus.READY.value,
+            )
+            .order_by(QuestionPaper.created_at.desc())
+        ).all()
+    )
+    if not papers:
+        return []
+
+    # topic_id -> list of papers (may include multi papers)
+    by_topic: dict[str, list[QuestionPaper]] = defaultdict(list)
+    for paper in papers:
+        batch_ids = _batch_ids_for_paper(db, paper=paper)
+        for bid in batch_ids:
+            by_topic[bid].append(paper)
+
+    if not by_topic:
+        return []
+
+    folders: list[dict] = []
+    for topic_id, topic_papers in by_topic.items():
+        batch = db.get(BatchFolder, topic_id)
+        if batch is None or batch.user_id != user_id:
+            continue
+        # Ensure newest first (already from global order, but re-sort)
+        topic_papers_sorted = sorted(
+            topic_papers,
+            key=lambda p: p.created_at or datetime.min.replace(tzinfo=timezone.utc),
+            reverse=True,
+        )
+        latest = topic_papers_sorted[0].created_at
+        folders.append(
+            {
+                "topic_id": topic_id,
+                "topic_name": (batch.name or "").strip() or "Topic",
+                "latest_test_at": latest,
+                "test_count": len(topic_papers_sorted),
+                "tests": [
+                    {
+                        "id": p.id,
+                        "note_id": p.note_id,
+                        "batch_folder_id": p.batch_folder_id,
+                        "title": titles.get(p.id) or p.title,
+                        "language": p.language,
+                        "status": p.status,
+                        "question_count": p.question_count,
+                        "created_at": p.created_at,
+                    }
+                    for p in topic_papers_sorted
+                ],
+            }
+        )
+
+    folders.sort(
+        key=lambda f: (
+            -(f["latest_test_at"].timestamp() if f["latest_test_at"] else 0),
+            (f["topic_name"] or "").lower(),
+        )
+    )
+    return folders
+
+
 def _month_paper_count(db: Session, *, user_id: str) -> int:
     now = datetime.now(timezone.utc)
     start = datetime(now.year, now.month, 1, tzinfo=timezone.utc)
@@ -295,6 +454,15 @@ def generate_paper_for_note(
             ),
         )
 
+    if note.batch_folder_id:
+        batch = db.get(BatchFolder, note.batch_folder_id)
+        if batch is not None:
+            title = _build_paper_title(db, user_id=user.id, batches=[batch])
+        else:
+            title = "Test-1"
+    else:
+        title = "Test-1"
+
     paper = QuestionPaper(
         id=str(uuid.uuid4()),
         user_id=user.id,
@@ -302,7 +470,7 @@ def generate_paper_for_note(
         batch_folder_id=note.batch_folder_id,
         language=lang,
         status=PaperStatus.READY.value,
-        title=f"Practice — {note.title}"[:255],
+        title=title,
         question_count=len(selected),
     )
     db.add(paper)
@@ -499,10 +667,7 @@ def generate_paper_for_batches(
             ),
         )
 
-    if len(batches) == 1:
-        title = f"Practice — {batches[0].name}"
-    else:
-        title = f"Practice — {len(batches)} topics"
+    title = _build_paper_title(db, user_id=user.id, batches=batches)
 
     paper = QuestionPaper(
         id=str(uuid.uuid4()),
@@ -511,7 +676,7 @@ def generate_paper_for_batches(
         batch_folder_id=batches[0].id,
         language=lang,
         status=PaperStatus.READY.value,
-        title=title[:255],
+        title=title,
         question_count=len(selected),
     )
     db.add(paper)

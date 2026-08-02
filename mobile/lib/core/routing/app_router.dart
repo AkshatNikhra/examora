@@ -19,6 +19,7 @@ import '../../features/onboarding/presentation/onboarding_profile_screen.dart';
 import '../../features/papers/presentation/attempt_score_screen.dart';
 import '../../features/papers/presentation/paper_detail_screen.dart';
 import '../../features/papers/presentation/papers_list_screen.dart';
+import '../../features/papers/presentation/topic_tests_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/shell/presentation/main_shell.dart';
 import '../../repositories/papers_repository.dart';
@@ -118,6 +119,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: '/app/tests',
             name: 'tests',
             builder: (context, state) => const PapersListScreen(),
+            routes: [
+              GoRoute(
+                path: 'topics/:topicId',
+                name: 'topicTests',
+                parentNavigatorKey: _rootNavigatorKey,
+                builder: (context, state) {
+                  final topicId = state.pathParameters['topicId'] ?? '';
+                  final extra = state.extra;
+                  return TopicTestsScreen(
+                    topicId: topicId,
+                    initialFolder:
+                        extra is TestTopicFolder ? extra : null,
+                  );
+                },
+              ),
+            ],
           ),
           GoRoute(
             path: '/app/profile',

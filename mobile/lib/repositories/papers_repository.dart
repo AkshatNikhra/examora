@@ -77,6 +77,35 @@ class PaperSummary {
   }
 }
 
+class TestTopicFolder {
+  TestTopicFolder({
+    required this.topicId,
+    required this.topicName,
+    required this.latestTestAt,
+    required this.testCount,
+    required this.tests,
+  });
+
+  final String topicId;
+  final String topicName;
+  final DateTime latestTestAt;
+  final int testCount;
+  final List<PaperSummary> tests;
+
+  factory TestTopicFolder.fromJson(Map<String, dynamic> json) {
+    return TestTopicFolder(
+      topicId: json['topic_id'] as String,
+      topicName: json['topic_name'] as String? ?? 'Topic',
+      latestTestAt: DateTime.parse(json['latest_test_at'] as String),
+      testCount: json['test_count'] as int? ?? 0,
+      tests: (json['tests'] as List<dynamic>? ?? [])
+          .whereType<Map<String, dynamic>>()
+          .map(PaperSummary.fromJson)
+          .toList(),
+    );
+  }
+}
+
 class PaperDetail {
   PaperDetail({
     required this.id,
@@ -290,6 +319,22 @@ class PapersRepository {
       return data
           .whereType<Map<String, dynamic>>()
           .map(PaperSummary.fromJson)
+          .toList();
+    } on DioException catch (error) {
+      throw NetworkFailure(_dioMessage(error));
+    } catch (error) {
+      if (error is AppFailure) rethrow;
+      throw UnexpectedFailure(error.toString());
+    }
+  }
+
+  Future<List<TestTopicFolder>> listTestTopicFolders() async {
+    try {
+      final response = await _dio.get<List<dynamic>>('/papers/topics');
+      final data = response.data ?? [];
+      return data
+          .whereType<Map<String, dynamic>>()
+          .map(TestTopicFolder.fromJson)
           .toList();
     } on DioException catch (error) {
       throw NetworkFailure(_dioMessage(error));

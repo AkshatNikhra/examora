@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/errors/app_failure.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../repositories/exams_repository.dart';
 import '../../../repositories/notes_repository.dart';
@@ -181,10 +182,28 @@ class _BatchDetailScreenState extends ConsumerState<BatchDetailScreen> {
     _syncPolling(asyncNotes.valueOrNull);
 
     return Scaffold(
+      backgroundColor: AppTheme.cream,
       appBar: AppBar(
         title: asyncBatch.maybeWhen(
-          data: (b) => Text(b.name),
-          orElse: () => Text(l10n.batchDetailTitle),
+          data: (b) => Text(
+            b.name,
+            style: const TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          orElse: () => Text(
+            l10n.batchDetailTitle,
+            style: const TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+        titleTextStyle: const TextStyle(
+          color: AppTheme.ink,
+          fontSize: 26,
+          fontWeight: FontWeight.w800,
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -223,45 +242,34 @@ class _BatchDetailScreenState extends ConsumerState<BatchDetailScreen> {
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
                     children: [
-                      asyncBatch.maybeWhen(
-                        data: (batch) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Text(
-                                l10n.batchMeta(
-                                  batch.noteCount,
-                                  batch.hasPaper
-                                      ? l10n.batchHasPaper
-                                      : l10n.batchNoPaper,
+                      FilledButton.icon(
+                        onPressed: _generating || notes.isEmpty
+                            ? null
+                            : _createTest,
+                        icon: _generating
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
                                 ),
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              FilledButton(
-                                onPressed: _generating || notes.isEmpty
-                                    ? null
-                                    : _createTest,
-                                child: _generating
-                                    ? Text(l10n.paperGenerating)
-                                    : Text(l10n.batchCreateTestCta),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                l10n.batchCreateTestHint,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
+                              )
+                            : const Icon(Icons.ballot_outlined),
+                        label: Text(
+                          _generating
+                              ? l10n.paperGenerating
+                              : l10n.batchCreateTestCta,
                         ),
-                        orElse: () => const SizedBox.shrink(),
                       ),
-                      Text(l10n.batchNotesTitle, style: theme.textTheme.titleMedium),
+                      const SizedBox(height: 16),
+                      Text(
+                        l10n.batchNotesTitle,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                       const SizedBox(height: 8),
                       if (notes.isEmpty)
                         Padding(

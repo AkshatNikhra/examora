@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/errors/app_failure.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../repositories/exams_repository.dart';
 import '../../../repositories/papers_repository.dart';
@@ -36,34 +37,26 @@ class _ExamDetailScreenState extends ConsumerState<ExamDetailScreen> {
   final Set<String> _selected = {};
   bool _generating = false;
 
+  static const _titleStyle = TextStyle(
+    color: AppTheme.ink,
+    fontSize: 26,
+    fontWeight: FontWeight.w800,
+  );
+
   Future<void> _createBatch() async {
     final l10n = AppLocalizations.of(context);
-    final hint = ref.read(examUploadHintProvider(widget.examId)).valueOrNull;
     final controller = TextEditingController();
     final name = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l10n.batchCreateTitle),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (hint?.suggestNewBatch == true && hint?.reason != null) ...[
-              Text(
-                hint!.reason!,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              const SizedBox(height: 12),
-            ],
-            TextField(
-              controller: controller,
-              autofocus: true,
-              decoration: InputDecoration(
-                labelText: l10n.batchNameLabel,
-                hintText: l10n.batchNameHint,
-              ),
-            ),
-          ],
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: InputDecoration(
+            labelText: l10n.batchNameLabel,
+            hintText: l10n.batchNameHint,
+          ),
         ),
         actions: [
           TextButton(
@@ -163,15 +156,16 @@ class _ExamDetailScreenState extends ConsumerState<ExamDetailScreen> {
     final theme = Theme.of(context);
     final asyncExam = ref.watch(examDetailProvider(widget.examId));
     final asyncBatches = ref.watch(examBatchesProvider(widget.examId));
-    final asyncHint = ref.watch(examUploadHintProvider(widget.examId));
     final selectedCount = _selected.length;
 
     return Scaffold(
+      backgroundColor: AppTheme.cream,
       appBar: AppBar(
         title: asyncExam.maybeWhen(
-          data: (e) => Text(e.name),
-          orElse: () => Text(l10n.examDetailTitle),
+          data: (e) => Text(e.name, style: _titleStyle),
+          orElse: () => Text(l10n.examDetailTitle, style: _titleStyle),
         ),
+        titleTextStyle: _titleStyle,
       ),
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,
@@ -189,7 +183,7 @@ class _ExamDetailScreenState extends ConsumerState<ExamDetailScreen> {
                         height: 18,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Icon(Icons.quiz_outlined),
+                    : const Icon(Icons.ballot_outlined),
                 label: Text(
                   _generating
                       ? l10n.paperGenerating
@@ -226,25 +220,12 @@ class _ExamDetailScreenState extends ConsumerState<ExamDetailScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 140),
               children: [
-                asyncHint.maybeWhen(
-                  data: (hint) {
-                    if (!hint.suggestNewBatch) return const SizedBox.shrink();
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Text(
-                          hint.reason ?? l10n.batchSuggestNew,
-                          style: theme.textTheme.bodyMedium,
-                        ),
-                      ),
-                    );
-                  },
-                  orElse: () => const SizedBox.shrink(),
-                ),
                 Text(
                   l10n.batchListTitle,
-                  style: theme.textTheme.titleMedium,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 if (batches.isNotEmpty) ...[
                   const SizedBox(height: 4),
@@ -277,15 +258,14 @@ class _ExamDetailScreenState extends ConsumerState<ExamDetailScreen> {
                             value: selected,
                             onChanged: (_) => _toggle(batch.id),
                           ),
-                          title: Text(batch.name),
-                          subtitle: Text(
-                            l10n.batchMeta(
-                              batch.noteCount,
-                              batch.hasPaper
-                                  ? l10n.batchHasPaper
-                                  : l10n.batchNoPaper,
+                          title: Text(
+                            batch.name,
+                            style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
+                          subtitle: Text(l10n.batchMeta(batch.noteCount)),
                           trailing: const Icon(Icons.chevron_right),
                           onTap: () => context.push('/batches/${batch.id}'),
                           onLongPress: () => _toggle(batch.id),

@@ -232,9 +232,9 @@
   "@papersListTitle": {
     "description": "Papers / tests list app bar"
   },
-  "papersListEmpty": "No papers yet. Open a Ready note and create a practice paper.",
+  "papersListEmpty": "No tests yet. Create a practice test from a topic.",
   "@papersListEmpty": {
-    "description": "Empty papers list"
+    "description": "Empty tests / topic folders list"
   },
   "attemptHint": "Select one option for each question, then submit to see your score.",
   "@attemptHint": {
@@ -366,11 +366,11 @@
   "@batchListEmpty": {
     "description": "Empty topics"
   },
-  "batchCreateCta": "New topic",
+  "batchCreateCta": "New Topic",
   "@batchCreateCta": {
     "description": "Create topic FAB"
   },
-  "batchCreateTitle": "New topic",
+  "batchCreateTitle": "New Topic",
   "@batchCreateTitle": {
     "description": "Create topic dialog title"
   },
@@ -388,53 +388,52 @@
   },
   "batchSuggestNew": "A test was already created from a topic. Prefer creating a new topic for new uploads.",
   "@batchSuggestNew": {
-    "description": "Fallback post-test nudge"
+    "description": "Fallback post-test nudge (unused in UI)"
   },
-  "batchMeta": "{notes} notes · {paperStatus}",
+  "batchMeta": "{notes} notes",
   "@batchMeta": {
     "description": "Topic list subtitle",
     "placeholders": {
-      "notes": {"type": "int"},
-      "paperStatus": {"type": "String"}
+      "notes": {"type": "int"}
     }
   },
   "batchHasPaper": "test created",
   "@batchHasPaper": {
-    "description": "Topic has paper label"
+    "description": "Topic has paper label (unused)"
   },
   "batchNoPaper": "no test yet",
   "@batchNoPaper": {
-    "description": "Topic no paper label"
+    "description": "Topic no paper label (unused)"
   },
   "batchDetailTitle": "Topic",
   "@batchDetailTitle": {
     "description": "Fallback topic title"
   },
-  "batchNotesTitle": "Notes in this topic",
+  "batchNotesTitle": "Notes",
   "@batchNotesTitle": {
     "description": "Notes section in topic"
   },
-  "batchNotesEmpty": "Upload PDFs into this topic (max 20 pages total for a test).",
+  "batchNotesEmpty": "Upload PDF notes into this topic.",
   "@batchNotesEmpty": {
     "description": "Empty topic notes"
   },
-  "batchCreateTestCta": "Create practice test",
+  "batchCreateTestCta": "Create Test",
   "@batchCreateTestCta": {
     "description": "Generate paper from topic"
   },
   "batchCreateTestHint": "Processes any unprocessed notes in this topic, then creates a test from all notes.",
   "@batchCreateTestHint": {
-    "description": "Hint under create test"
+    "description": "Hint under create test (unused)"
   },
-  "topicsSelectHint": "Select one or more topics to combine into a single practice test.",
+  "topicsSelectHint": "Select topics to combine into one test.",
   "@topicsSelectHint": {
     "description": "Multi-topic select hint on exam detail"
   },
-  "topicsCreateTestCta": "Create practice test",
+  "topicsCreateTestCta": "Create Test",
   "@topicsCreateTestCta": {
     "description": "Generate paper from selected topics"
   },
-  "topicsCreateTestSelected": "Create test ({count})",
+  "topicsCreateTestSelected": "Create Test ({count})",
   "@topicsCreateTestSelected": {
     "description": "Generate from N selected topics",
     "placeholders": {

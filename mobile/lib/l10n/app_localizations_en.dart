@@ -188,7 +188,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get papersListEmpty =>
-      'No papers yet. Open a Ready note and create a practice paper.';
+      'No tests yet. Create a practice test from a topic.';
 
   @override
   String get attemptHint =>
@@ -290,10 +290,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'No topics yet. Create one (e.g. Constitution) and upload notes into it.';
 
   @override
-  String get batchCreateCta => 'New topic';
+  String get batchCreateCta => 'New Topic';
 
   @override
-  String get batchCreateTitle => 'New topic';
+  String get batchCreateTitle => 'New Topic';
 
   @override
   String get batchCreateConfirm => 'Create';
@@ -309,8 +309,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'A test was already created from a topic. Prefer creating a new topic for new uploads.';
 
   @override
-  String batchMeta(int notes, String paperStatus) {
-    return '$notes notes · $paperStatus';
+  String batchMeta(int notes) {
+    return '$notes notes';
   }
 
   @override
@@ -323,29 +323,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get batchDetailTitle => 'Topic';
 
   @override
-  String get batchNotesTitle => 'Notes in this topic';
+  String get batchNotesTitle => 'Notes';
 
   @override
-  String get batchNotesEmpty =>
-      'Upload PDFs into this topic (max 20 pages total for a test).';
+  String get batchNotesEmpty => 'Upload PDF notes into this topic.';
 
   @override
-  String get batchCreateTestCta => 'Create practice test';
+  String get batchCreateTestCta => 'Create Test';
 
   @override
   String get batchCreateTestHint =>
       'Processes any unprocessed notes in this topic, then creates a test from all notes.';
 
   @override
-  String get topicsSelectHint =>
-      'Select one or more topics to combine into a single practice test.';
+  String get topicsSelectHint => 'Select topics to combine into one test.';
 
   @override
-  String get topicsCreateTestCta => 'Create practice test';
+  String get topicsCreateTestCta => 'Create Test';
 
   @override
   String topicsCreateTestSelected(int count) {
-    return 'Create test ($count)';
+    return 'Create Test ($count)';
   }
 
   @override
