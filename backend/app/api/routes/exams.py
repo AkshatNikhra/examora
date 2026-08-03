@@ -35,6 +35,7 @@ def _exam_response(db: Session, exam) -> ExamResponse:
 
 
 def _batch_response(db: Session, batch) -> BatchFolderResponse:
+    canonical = (getattr(batch, "canonical_content_en", None) or "").strip()
     return BatchFolderResponse(
         id=batch.id,
         exam_id=batch.exam_id,
@@ -42,6 +43,8 @@ def _batch_response(db: Session, batch) -> BatchFolderResponse:
         created_at=batch.created_at,
         note_count=exams_service.note_count_for_batch(db, batch_id=batch.id),
         has_paper=exams_service.batch_has_paper(db, batch_id=batch.id),
+        has_canonical=bool(canonical),
+        canonical_preview=canonical[:240] if canonical else None,
     )
 
 

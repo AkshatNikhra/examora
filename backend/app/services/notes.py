@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 import uuid
 from pathlib import Path
 
@@ -12,34 +11,19 @@ from sqlalchemy.orm import Session
 
 from app.ai.pdf_extract import pdf_page_count
 from app.core.config import settings
-from app.core.limits import limits_for
 from app.models import BatchFolder, Note, NoteStatus, User
-from app.services.r2 import download_pdf, upload_pdf
-
-logger = logging.getLogger(__name__)
+from app.services.r2 import upload_pdf
 
 
-def _page_count_or_reject(raw: bytes) -> int:
+def _validate_pdf(raw: bytes) -> None:
+    """Reject unreadable PDF bytes (does not enforce a page count)."""
     try:
-        return pdf_page_count(raw)
+        pdf_page_count(raw)
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid PDF: {exc}",
         ) from exc
-
-
-def _existing_batch_page_total(db: Session, *, batch_folder_id: str) -> int:
-    notes = list(
-        db.scalars(select(Note).where(Note.batch_folder_id == batch_folder_id)).all()
-    )
-    total = 0
-    for note in notes:
-        try:
-            total += pdf_page_count(download_pdf(key=note.file_url))
-        except Exception as exc:  # noqa: BLE001
-            logger.warning("Could not count pages for note %s: %s", note.id, exc)
-    return total
 
 
 async def create_note_from_upload(
@@ -68,17 +52,7 @@ async def create_note_from_upload(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"PDF exceeds max size of {settings.MAX_PDF_SIZE_BYTES} bytes",
         )
-
-    pages = _page_count_or_reject(raw)
-    max_pages = limits_for(user.account_type).paper_max_pages
-    if pages > max_pages:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=(
-                f"PDF has {pages} pages; max allowed is {max_pages}. "
-                "Split or shorten the PDF before uploading."
-            ),
-        )
+    _validate_pdf(raw)
 
     resolved_batch_id: str | None = None
     if batch_folder_id:
@@ -87,16 +61,6 @@ async def create_note_from_upload(
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Batch folder not found",
-            )
-        existing = _existing_batch_page_total(db, batch_folder_id=batch.id)
-        if existing + pages > max_pages:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=(
-                    f"This PDF has {pages} pages; the batch already has about {existing}. "
-                    f"Max allowed per batch is {max_pages}. "
-                    "Upload into a new batch or use a shorter PDF."
-                ),
             )
         resolved_batch_id = batch.id
 

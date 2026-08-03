@@ -6,6 +6,7 @@ import logging
 from datetime import datetime, timezone
 
 from fastapi import HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.ai.pdf_extract import extract_text_from_pdf
@@ -13,7 +14,7 @@ from app.ai.understand import understand_notes
 from app.core.config import settings
 from app.core.database import SessionLocal
 from app.core.limits import limits_for
-from app.models import Note, NoteStatus, User
+from app.models import BatchFolder, Note, NoteStatus, User
 from app.services.r2 import download_pdf
 
 logger = logging.getLogger(__name__)
@@ -58,6 +59,36 @@ def _resolve_raw_text(
     return ocr_text, "ocr"
 
 
+def refresh_topic_canonical(db: Session, *, batch_folder_id: str) -> BatchFolder | None:
+    """Rebuild topic.canonical_content_en from Ready notes in the batch."""
+    batch = db.get(BatchFolder, batch_folder_id)
+    if batch is None:
+        return None
+
+    notes = list(
+        db.scalars(
+            select(Note)
+            .where(
+                Note.batch_folder_id == batch_folder_id,
+                Note.status == NoteStatus.READY.value,
+            )
+            .order_by(Note.created_at.asc())
+        ).all()
+    )
+    parts = [
+        (n.canonical_content_en or "").strip()
+        for n in notes
+        if (n.canonical_content_en or "").strip()
+    ]
+    joined = "\n\n".join(parts).strip()
+    batch.canonical_content_en = joined or None
+    batch.canonical_updated_at = datetime.now(timezone.utc) if joined else None
+    db.add(batch)
+    db.commit()
+    db.refresh(batch)
+    return batch
+
+
 def process_note_job(note_id: str) -> None:
     """Run outside the request DB session (BackgroundTasks-safe)."""
     db = SessionLocal()
@@ -100,6 +131,9 @@ def process_note(db: Session, *, note_id: str) -> Note:
         note.status = NoteStatus.READY.value
         db.commit()
         db.refresh(note)
+        if note.batch_folder_id:
+            refresh_topic_canonical(db, batch_folder_id=note.batch_folder_id)
+            db.refresh(note)
         return note
     except Exception as exc:  # noqa: BLE001
         logger.exception("Note processing failed for %s", note_id)

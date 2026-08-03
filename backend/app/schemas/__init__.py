@@ -236,6 +236,11 @@ class BatchFolderResponse(BaseModel):
     note_count: int = 0
     has_paper: bool = False
     page_count_estimate: int | None = None
+    has_canonical: bool = False
+    canonical_preview: str | None = Field(
+        default=None,
+        description="First ~240 chars of topic English canonical content when ready",
+    )
 
 
 class ExamUploadHintResponse(BaseModel):

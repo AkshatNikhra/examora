@@ -34,7 +34,8 @@ def test_generate_paper_requires_ready_note(
         json={"language": "en"},
     )
     assert resp.status_code == 400
-    assert "Ready" in resp.json()["detail"]
+    detail = resp.json()["detail"]
+    assert "prepared" in detail.lower() or "Ready" in detail
 
 
 def test_generate_paper_success(
@@ -58,16 +59,8 @@ def test_generate_paper_success(
         ),
     )
     monkeypatch.setattr(
-        "app.services.papers.download_pdf",
-        lambda **kwargs: b"%PDF-fake%",
-    )
-    monkeypatch.setattr(
-        "app.services.papers.pdf_page_count",
-        lambda _pdf: 2,
-    )
-    monkeypatch.setattr(
         "app.services.papers.generate_mcqs_from_notes",
-        lambda _canonical, output_language="en": [
+        lambda _canonical, output_language="en", **_kwargs: [
             {
                 "variant_group_id": "g1",
                 "topic": "Equality",

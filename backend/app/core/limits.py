@@ -14,6 +14,7 @@ class AccountLimits:
     note_ai_max_chunks: int
     paper_monthly_create_limit: int
     paper_max_pages: int
+    paper_mcq_max_chunks: int
 
 
 def normalize_account_type(account_type: str | AccountType | None) -> AccountType:
@@ -76,5 +77,12 @@ def limits_for(account_type: str | AccountType | None) -> AccountLimits:
             admin=settings.PAPER_MAX_PAGES_ADMIN,
             dev=settings.PAPER_MAX_PAGES_DEV,
             tester=settings.PAPER_MAX_PAGES_TESTER,
+        ),
+        paper_mcq_max_chunks=_pick(
+            t,
+            base=settings.PAPER_MCQ_MAX_CHUNKS,
+            admin=settings.PAPER_MCQ_MAX_CHUNKS_ADMIN,
+            dev=settings.PAPER_MCQ_MAX_CHUNKS_DEV,
+            tester=settings.PAPER_MCQ_MAX_CHUNKS_TESTER,
         ),
     )

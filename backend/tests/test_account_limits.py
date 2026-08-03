@@ -42,6 +42,16 @@ def test_limits_for_uses_tier_env_values(monkeypatch: pytest.MonkeyPatch) -> Non
     assert limits_for("weird").ocr_max_pages == 20  # unknown → USER
 
 
+def test_limits_for_includes_paper_mcq_max_chunks(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("app.core.limits.settings.PAPER_MCQ_MAX_CHUNKS", 20)
+    monkeypatch.setattr("app.core.limits.settings.PAPER_MCQ_MAX_CHUNKS_ADMIN", 200)
+    monkeypatch.setattr("app.core.limits.settings.PAPER_MCQ_MAX_CHUNKS_DEV", 50)
+    monkeypatch.setattr("app.core.limits.settings.PAPER_MCQ_MAX_CHUNKS_TESTER", 20)
+    assert limits_for("USER").paper_mcq_max_chunks == 20
+    assert limits_for("ADMIN").paper_mcq_max_chunks == 200
+    assert limits_for("DEV").paper_mcq_max_chunks == 50
+
+
 def _auth(monkeypatch: pytest.MonkeyPatch, uid: str, phone: str) -> None:
     monkeypatch.setattr(
         "app.core.deps.verify_firebase_token",
@@ -137,7 +147,7 @@ def test_process_note_passes_ocr_max_pages_for_account_type(
     assert captured["max_pages"] == 1000
 
 
-def test_upload_rejects_pdf_over_page_limit(
+def test_upload_allows_large_page_count(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     uid = "user-limits-upload-pages"
@@ -146,32 +156,18 @@ def test_upload_rejects_pdf_over_page_limit(
         "app.services.notes.upload_pdf",
         lambda **kwargs: kwargs["key"],
     )
-    monkeypatch.setattr("app.services.notes.pdf_page_count", lambda _pdf: 25)
-    monkeypatch.setattr("app.core.limits.settings.PAPER_MAX_PAGES", 20)
-    monkeypatch.setattr("app.core.limits.settings.PAPER_MAX_PAGES_ADMIN", 1000)
+    monkeypatch.setattr("app.services.notes.pdf_page_count", lambda _pdf: 250)
 
-    denied = client.post(
-        "/notes",
-        headers={"Authorization": "Bearer t"},
-        files={"file": ("long.pdf", b"%PDF-1.4", "application/pdf")},
-        data={"title": "Too long", "language": "en"},
-    )
-    assert denied.status_code == 400
-    assert "25 pages" in denied.json()["detail"]
-    assert "20" in denied.json()["detail"]
-
-    _set_account_type(uid, AccountType.ADMIN.value)
-    monkeypatch.setattr("app.services.notes.pdf_page_count", lambda _pdf: 25)
     allowed = client.post(
         "/notes",
         headers={"Authorization": "Bearer t"},
         files={"file": ("long.pdf", b"%PDF-1.4", "application/pdf")},
-        data={"title": "Admin long", "language": "en"},
+        data={"title": "Long notes", "language": "en"},
     )
     assert allowed.status_code == 201
 
 
-def test_generate_paper_page_limit_respects_account_type(
+def test_generate_paper_does_not_enforce_page_limit(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     uid = "user-limits-paper"
@@ -193,20 +189,10 @@ def test_generate_paper_page_limit_respects_account_type(
         ),
     )
     monkeypatch.setattr(
-        "app.services.papers.download_pdf",
-        lambda **kwargs: b"%PDF-fake%",
-    )
-    monkeypatch.setattr("app.services.papers.pdf_page_count", lambda _pdf: 50)
-    monkeypatch.setattr(
         "app.services.papers.generate_mcqs_from_notes",
-        lambda _canonical, output_language="en": _mcq_payload(),
+        lambda _canonical, output_language="en", **_kwargs: _mcq_payload(),
     )
-    monkeypatch.setattr("app.core.limits.settings.PAPER_MAX_PAGES", 20)
-    monkeypatch.setattr("app.core.limits.settings.PAPER_MAX_PAGES_ADMIN", 1000)
     monkeypatch.setattr("app.core.limits.settings.PAPER_MONTHLY_CREATE_LIMIT", 100)
-    monkeypatch.setattr(
-        "app.core.limits.settings.PAPER_MONTHLY_CREATE_LIMIT_ADMIN", 10000
-    )
 
     upload = client.post(
         "/notes",
@@ -223,25 +209,13 @@ def test_generate_paper_page_limit_respects_account_type(
     )
     assert process.status_code == 200
 
-    # USER capped at 20 pages → reject 50-page note
-    denied = client.post(
+    paper = client.post(
         f"/notes/{note_id}/generate-paper",
         headers={"Authorization": "Bearer t"},
         json={"language": "en"},
     )
-    assert denied.status_code == 400
-    assert "50 pages" in denied.json()["detail"]
-    assert "20" in denied.json()["detail"]
-
-    # ADMIN allows up to 1000 pages
-    _set_account_type(uid, AccountType.ADMIN.value)
-    allowed = client.post(
-        f"/notes/{note_id}/generate-paper",
-        headers={"Authorization": "Bearer t"},
-        json={"language": "en"},
-    )
-    assert allowed.status_code == 200
-    assert allowed.json()["status"] == "ready"
+    assert paper.status_code == 200
+    assert paper.json()["status"] == "ready"
 
 
 def test_me_defaults_account_type_user(

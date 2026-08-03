@@ -14,7 +14,6 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.ai.generate_mcqs import generate_mcqs_from_notes
-from app.ai.pdf_extract import pdf_page_count
 from app.core.config import settings
 from app.core.limits import limits_for
 from app.models import (
@@ -28,8 +27,7 @@ from app.models import (
     QuestionPaper,
     User,
 )
-from app.services.note_processing import process_note
-from app.services.r2 import download_pdf
+from app.services.note_processing import process_note, refresh_topic_canonical
 
 logger = logging.getLogger(__name__)
 
@@ -230,41 +228,6 @@ def _enforce_quota(
         )
 
 
-def _page_count_for_note(note: Note) -> int:
-    try:
-        pdf_bytes = download_pdf(key=note.file_url)
-        return pdf_page_count(pdf_bytes)
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("Could not count PDF pages for note %s: %s", note.id, exc)
-        return 0
-
-
-def _enforce_page_limit(note: Note, *, max_pages: int) -> None:
-    pages = _page_count_for_note(note)
-    if pages > max_pages:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=(
-                f"Note has {pages} pages; max allowed per create is "
-                f"{max_pages}. Use a shorter PDF for V1."
-            ),
-        )
-
-
-def _enforce_batch_page_limit(notes: list[Note], *, max_pages: int) -> None:
-    total = 0
-    for note in notes:
-        total += _page_count_for_note(note)
-    if total > max_pages:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=(
-                f"Batch has about {total} pages across notes; max allowed per create is "
-                f"{max_pages}. Split into a new batch folder."
-            ),
-        )
-
-
 def _resolve_language(user: User, language: str | None) -> str:
     lang = (language or user.preferred_paper_language or "").strip().lower()
     if lang not in {"en", "hi"}:
@@ -394,6 +357,8 @@ def generate_paper_for_note(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Note could not be prepared for a test. Check the upload and try again.",
         )
+    if note.batch_folder_id:
+        refresh_topic_canonical(db, batch_folder_id=note.batch_folder_id)
     canonical = (note.canonical_content_en or "").strip()
     if not canonical:
         raise HTTPException(
@@ -407,7 +372,6 @@ def generate_paper_for_note(
         user_id=user.id,
         monthly_limit=limits.paper_monthly_create_limit,
     )
-    _enforce_page_limit(note, max_pages=limits.paper_max_pages)
 
     lang = _resolve_language(user, language)
     if user.preferred_paper_language != lang:
@@ -415,7 +379,11 @@ def generate_paper_for_note(
         db.add(user)
 
     try:
-        generated = generate_mcqs_from_notes(canonical, output_language=lang)
+        generated = generate_mcqs_from_notes(
+            canonical,
+            output_language=lang,
+            max_chunks=limits.paper_mcq_max_chunks,
+        )
     except Exception as exc:  # noqa: BLE001
         logger.exception("MCQ generation failed for note %s", note_id)
         raise HTTPException(
@@ -582,7 +550,6 @@ def generate_paper_for_batches(
         user_id=user.id,
         monthly_limit=limits.paper_monthly_create_limit,
     )
-    _enforce_batch_page_limit(notes, max_pages=limits.paper_max_pages)
 
     # Auto-process any note that is not Ready (student never taps Process).
     for note in notes:
@@ -601,7 +568,7 @@ def generate_paper_for_batches(
                     detail=f"Failed to process note “{note.title}”: {exc}",
                 ) from exc
 
-    # Re-load after processing
+    # Re-load after processing and refresh each topic's joined canonical.
     notes = list(
         db.scalars(
             select(Note)
@@ -621,46 +588,65 @@ def generate_paper_for_batches(
             detail="Could not prepare notes for a test. Check uploads and try again.",
         )
 
+    for bid in ids:
+        refresh_topic_canonical(db, batch_folder_id=bid)
+
+    # Reload batches after canonical refresh
+    batches = [db.get(BatchFolder, b.id) for b in batches]
+    batches = [b for b in batches if b is not None]
+
     lang = _resolve_language(user, language)
     if user.preferred_paper_language != lang:
         user.preferred_paper_language = lang
         db.add(user)
 
-    canonical = "\n\n".join(
-        (n.canonical_content_en or "").strip() for n in ready
-    ).strip()
-    primary = ready[0]
+    notes_by_batch: dict[str, list[Note]] = defaultdict(list)
+    for n in ready:
+        if n.batch_folder_id:
+            notes_by_batch[n.batch_folder_id].append(n)
+
     note_ids = [n.id for n in ready]
+    primary = ready[0]
 
-    try:
-        generated = generate_mcqs_from_notes(canonical, output_language=lang)
-    except Exception as exc:  # noqa: BLE001
-        logger.exception("MCQ generation failed for topics %s", ids)
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"Failed to generate MCQs: {exc}",
-        ) from exc
+    for batch in batches:
+        topic_canonical = (batch.canonical_content_en or "").strip()
+        if not topic_canonical:
+            continue
+        topic_notes = notes_by_batch.get(batch.id) or []
+        anchor = topic_notes[0] if topic_notes else primary
+        try:
+            generated = generate_mcqs_from_notes(
+                topic_canonical,
+                output_language=lang,
+                max_chunks=limits.paper_mcq_max_chunks,
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("MCQ generation failed for topic %s", batch.id)
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"Failed to generate MCQs for “{batch.name}”: {exc}",
+            ) from exc
 
-    for item in generated:
-        options = item["options"]
-        question = Question(
-            id=str(uuid.uuid4()),
-            user_id=user.id,
-            note_id=primary.id,
-            variant_group_id=str(item["variant_group_id"])[:36],
-            topic=item.get("topic"),
-            stem=item["stem"],
-            option_a=options[0],
-            option_b=options[1],
-            option_c=options[2],
-            option_d=options[3],
-            correct_index=item["correct_index"],
-            explanation=item.get("explanation"),
-            language=lang,
-            content_hash=_content_hash(item["stem"], options),
-            ask_count=0,
-        )
-        db.add(question)
+        for item in generated:
+            options = item["options"]
+            question = Question(
+                id=str(uuid.uuid4()),
+                user_id=user.id,
+                note_id=anchor.id,
+                variant_group_id=str(item["variant_group_id"])[:36],
+                topic=item.get("topic") or batch.name,
+                stem=item["stem"],
+                option_a=options[0],
+                option_b=options[1],
+                option_c=options[2],
+                option_d=options[3],
+                correct_index=item["correct_index"],
+                explanation=item.get("explanation"),
+                language=lang,
+                content_hash=_content_hash(item["stem"], options),
+                ask_count=0,
+            )
+            db.add(question)
 
     db.flush()
 

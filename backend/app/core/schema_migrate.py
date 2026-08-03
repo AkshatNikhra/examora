@@ -34,6 +34,11 @@ _PAPER_COLUMNS: list[tuple[str, str]] = [
     ("batch_folder_id", "VARCHAR(36)"),
 ]
 
+_BATCH_COLUMNS: list[tuple[str, str]] = [
+    ("canonical_content_en", "TEXT"),
+    ("canonical_updated_at", "TIMESTAMPTZ"),
+]
+
 
 def _add_columns(engine: Engine, table: str, columns: list[tuple[str, str]]) -> None:
     dialect = engine.dialect.name
@@ -95,6 +100,7 @@ def ensure_phase4b_schema(engine: Engine) -> None:
     Base.metadata.create_all(bind=engine)
     _add_columns(engine, "notes", [("batch_folder_id", "VARCHAR(36)")])
     _add_columns(engine, "question_papers", _PAPER_COLUMNS)
+    _add_columns(engine, "batch_folders", _BATCH_COLUMNS)
     _make_paper_note_id_nullable(engine)
 
 

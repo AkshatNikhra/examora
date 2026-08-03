@@ -29,16 +29,8 @@ def _mock_pipeline(monkeypatch: pytest.MonkeyPatch) -> None:
         ),
     )
     monkeypatch.setattr(
-        "app.services.papers.download_pdf",
-        lambda **kwargs: b"%PDF-fake%",
-    )
-    monkeypatch.setattr(
-        "app.services.papers.pdf_page_count",
-        lambda _pdf: 2,
-    )
-    monkeypatch.setattr(
         "app.services.papers.generate_mcqs_from_notes",
-        lambda _canonical, output_language="en": [
+        lambda _canonical, output_language="en", **_kwargs: [
             {
                 "variant_group_id": "g1",
                 "topic": "Equality",

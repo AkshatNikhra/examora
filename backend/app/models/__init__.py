@@ -112,7 +112,7 @@ class Exam(Base):
 
 
 class BatchFolder(Base):
-    """Upload batch inside an exam (e.g. 'a', 'Week 1'). 20-page create limit applies here."""
+    """Topic / upload batch inside an exam (e.g. 'Polity', 'Week 1')."""
 
     __tablename__ = "batch_folders"
 
@@ -130,6 +130,12 @@ class BatchFolder(Base):
         nullable=False,
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
+    # Joined AI-cleaned English text from Ready notes in this topic.
+    canonical_content_en: Mapped[str | None] = mapped_column(Text, nullable=True)
+    canonical_updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
