@@ -11,6 +11,7 @@ class UserProfile {
     this.fullName,
     this.dateOfBirth,
     this.preferredPaperLanguage,
+    this.accountType = 'USER',
     this.onboardingCompleted = false,
   });
 
@@ -19,15 +20,32 @@ class UserProfile {
   final String? fullName;
   final String? dateOfBirth;
   final String? preferredPaperLanguage;
+  final String accountType;
   final bool onboardingCompleted;
 
+  /// Staff/dev labels only — null for normal USER (hidden in UI).
+  String? get accountTypeLabel {
+    switch (accountType.trim().toUpperCase()) {
+      case 'ADMIN':
+        return 'Admin';
+      case 'DEV':
+        return 'Dev';
+      case 'TESTER':
+        return 'Tester';
+      default:
+        return null;
+    }
+  }
+
   factory UserProfile.fromJson(Map<String, dynamic> json) {
+    final rawType = (json['account_type'] as String?)?.trim() ?? '';
     return UserProfile(
       id: json['id'] as String,
       phone: json['phone'] as String? ?? '',
       fullName: json['full_name'] as String?,
       dateOfBirth: json['date_of_birth'] as String?,
       preferredPaperLanguage: json['preferred_paper_language'] as String?,
+      accountType: rawType.isEmpty ? 'USER' : rawType,
       onboardingCompleted: json['onboarding_completed'] as bool? ?? false,
     );
   }

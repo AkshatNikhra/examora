@@ -93,6 +93,7 @@ def understand_notes_openai(
     declared_language: str = "en",
     max_input_chars: int | None = None,
     max_output_tokens: int | None = None,
+    max_chunks: int | None = None,
 ) -> tuple[str, str | None]:
     if not settings.OPENAI_API_KEY.strip():
         raise ValueError(
@@ -102,7 +103,8 @@ def understand_notes_openai(
 
     max_in = max_input_chars or settings.NOTE_AI_MAX_INPUT_CHARS
     max_out = max_output_tokens or settings.NOTE_AI_MAX_OUTPUT_TOKENS
-    max_chunks = max(1, settings.NOTE_AI_MAX_CHUNKS)
+    chunks_cap = max_chunks if max_chunks is not None else settings.NOTE_AI_MAX_CHUNKS
+    max_chunks_limit = max(1, chunks_cap)
 
     chunks = split_text_into_chunks(
         raw_text,
@@ -112,13 +114,13 @@ def understand_notes_openai(
     if not chunks:
         raise ValueError("No text to send to OpenAI")
 
-    if len(chunks) > max_chunks:
+    if len(chunks) > max_chunks_limit:
         logger.warning(
-            "Note has %s chunks; capping at NOTE_AI_MAX_CHUNKS=%s",
+            "Note has %s chunks; capping at max_chunks=%s",
             len(chunks),
-            max_chunks,
+            max_chunks_limit,
         )
-        chunks = chunks[:max_chunks]
+        chunks = chunks[:max_chunks_limit]
 
     total = len(chunks)
     logger.info("Understanding notes with OpenAI in %s chunk(s)", total)

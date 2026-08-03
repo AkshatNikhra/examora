@@ -16,6 +16,12 @@ from fastapi.testclient import TestClient
 from app.main import app
 
 
+@pytest.fixture(autouse=True)
+def _default_upload_page_count(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Fake PDF bytes in tests are not valid; default to 1 page on upload."""
+    monkeypatch.setattr("app.services.notes.pdf_page_count", lambda _pdf: 1)
+
+
 @pytest.fixture
 def client() -> TestClient:
     with TestClient(app) as test_client:

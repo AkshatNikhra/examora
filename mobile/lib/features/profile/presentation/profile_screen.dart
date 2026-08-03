@@ -160,6 +160,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 profile.fullName ?? 'Student',
                 style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
               ),
+              if (profile.accountTypeLabel != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  profile.accountTypeLabel!,
+                  style: const TextStyle(
+                    color: AppTheme.muted,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
               const SizedBox(height: 6),
               Text(
                 profile.phone,

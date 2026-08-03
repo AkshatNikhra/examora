@@ -12,7 +12,8 @@ from app.ai.pdf_extract import extract_text_from_pdf
 from app.ai.understand import understand_notes
 from app.core.config import settings
 from app.core.database import SessionLocal
-from app.models import Note, NoteStatus
+from app.core.limits import limits_for
+from app.models import Note, NoteStatus, User
 from app.services.r2 import download_pdf
 
 logger = logging.getLogger(__name__)
@@ -22,7 +23,11 @@ def _needs_ocr(text: str) -> bool:
     return len((text or "").strip()) < settings.OCR_MIN_TEXT_CHARS
 
 
-def _resolve_raw_text(pdf_bytes: bytes) -> tuple[str, str]:
+def _resolve_raw_text(
+    pdf_bytes: bytes,
+    *,
+    ocr_max_pages: int,
+) -> tuple[str, str]:
     """
     Return (raw_text, source_label).
     source_label is 'extract' or 'ocr' for logging/UX later.
@@ -45,11 +50,11 @@ def _resolve_raw_text(pdf_bytes: bytes) -> tuple[str, str]:
     logger.info(
         "Weak/empty text extract (%s chars) — running Google Vision OCR (max %s pages)",
         len(extracted.strip()),
-        settings.OCR_MAX_PAGES,
+        ocr_max_pages,
     )
     from app.ai.ocr_vision import ocr_pdf_with_vision
 
-    ocr_text = ocr_pdf_with_vision(pdf_bytes, max_pages=settings.OCR_MAX_PAGES)
+    ocr_text = ocr_pdf_with_vision(pdf_bytes, max_pages=ocr_max_pages)
     return ocr_text, "ocr"
 
 
@@ -68,17 +73,24 @@ def process_note(db: Session, *, note_id: str) -> Note:
         logger.warning("process_note: note %s not found", note_id)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Note not found")
 
+    owner = db.get(User, note.user_id)
+    limits = limits_for(owner.account_type if owner is not None else None)
+
     note.status = NoteStatus.PROCESSING.value
     note.error_message = None
     db.commit()
 
     try:
         pdf_bytes = download_pdf(key=note.file_url)
-        raw_text, source = _resolve_raw_text(pdf_bytes)
+        raw_text, source = _resolve_raw_text(
+            pdf_bytes,
+            ocr_max_pages=limits.ocr_max_pages,
+        )
         logger.info("Note %s text source=%s chars=%s", note_id, source, len(raw_text))
         canonical, source_language = understand_notes(
             raw_text,
             declared_language=note.language,
+            max_chunks=limits.note_ai_max_chunks,
         )
         note.raw_extracted_text = raw_text
         note.canonical_content_en = canonical

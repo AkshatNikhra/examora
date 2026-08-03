@@ -10,6 +10,7 @@ def understand_notes(
     raw_text: str,
     *,
     declared_language: str = "en",
+    max_chunks: int | None = None,
 ) -> tuple[str, str | None]:
     provider = (settings.NOTE_AI_PROVIDER or "local").strip().lower()
     if provider == "openai":
@@ -18,6 +19,7 @@ def understand_notes(
         return understand_notes_openai(
             raw_text,
             declared_language=declared_language,
+            max_chunks=max_chunks,
         )
     return understand_notes_local(
         raw_text,

@@ -36,7 +36,7 @@ def ocr_pdf_with_vision(pdf_bytes: bytes, *, max_pages: int | None = None) -> st
     from google.oauth2 import service_account
 
     page_limit = max_pages if max_pages is not None else settings.OCR_MAX_PAGES
-    page_limit = max(1, min(page_limit, settings.OCR_MAX_PAGES))
+    page_limit = max(1, page_limit)
 
     images = render_pdf_pages_as_png(pdf_bytes, max_pages=page_limit)
     if not images:

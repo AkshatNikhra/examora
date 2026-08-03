@@ -27,4 +27,5 @@ def test_me_upserts_user_from_firebase_claims(
     body = response.json()
     assert body["id"] == "firebase-uid-1"
     assert body["phone"] == "+919999999999"
+    assert body["account_type"] == "USER"
     assert "created_at" in body

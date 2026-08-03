@@ -21,6 +21,15 @@ class PaperStatus(str, Enum):
     FAILED = "failed"
 
 
+class AccountType(str, Enum):
+    """Per-account limit tier — selects *_ADMIN / *_DEV / *_TESTER env overrides."""
+
+    ADMIN = "ADMIN"
+    DEV = "DEV"
+    TESTER = "TESTER"
+    USER = "USER"
+
+
 class User(Base):
     """App user keyed by Firebase Auth UID."""
 
@@ -36,6 +45,11 @@ class User(Base):
     preferred_paper_language: Mapped[str | None] = mapped_column(
         String(8),
         nullable=True,
+    )
+    account_type: Mapped[str] = mapped_column(
+        String(16),
+        default=AccountType.USER.value,
+        nullable=False,
     )
     onboarding_completed: Mapped[int] = mapped_column(
         Integer,

@@ -22,6 +22,7 @@ _USER_COLUMNS: list[tuple[str, str]] = [
     ("full_name", "VARCHAR(255)"),
     ("date_of_birth", "VARCHAR(10)"),
     ("onboarding_completed", "INTEGER"),
+    ("account_type", "VARCHAR(16)"),
 ]
 
 _EXAM_COLUMNS: list[tuple[str, str]] = [
@@ -115,6 +116,14 @@ def ensure_phase6_schema(engine: Engine) -> None:
                     """
                 )
             )
+            conn.execute(
+                text(
+                    """
+                    UPDATE users SET account_type = 'USER'
+                    WHERE account_type IS NULL OR TRIM(account_type) = ''
+                    """
+                )
+            )
         elif dialect == "sqlite":
             conn.execute(
                 text(
@@ -122,6 +131,14 @@ def ensure_phase6_schema(engine: Engine) -> None:
                     UPDATE users SET onboarding_completed = 1
                     WHERE id IN (SELECT DISTINCT user_id FROM exams)
                       AND IFNULL(onboarding_completed, 0) = 0
+                    """
+                )
+            )
+            conn.execute(
+                text(
+                    """
+                    UPDATE users SET account_type = 'USER'
+                    WHERE account_type IS NULL OR TRIM(account_type) = ''
                     """
                 )
             )

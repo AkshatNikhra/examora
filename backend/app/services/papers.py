@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 from app.ai.generate_mcqs import generate_mcqs_from_notes
 from app.ai.pdf_extract import pdf_page_count
 from app.core.config import settings
+from app.core.limits import limits_for
 from app.models import (
     BatchFolder,
     Note,
@@ -212,14 +213,19 @@ def _month_paper_count(db: Session, *, user_id: str) -> int:
     return int(db.scalar(stmt) or 0)
 
 
-def _enforce_quota(db: Session, *, user_id: str) -> None:
+def _enforce_quota(
+    db: Session,
+    *,
+    user_id: str,
+    monthly_limit: int,
+) -> None:
     used = _month_paper_count(db, user_id=user_id)
-    if used >= settings.PAPER_MONTHLY_CREATE_LIMIT:
+    if used >= monthly_limit:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail=(
                 f"Monthly paper create limit reached "
-                f"({settings.PAPER_MONTHLY_CREATE_LIMIT}). Try again next month."
+                f"({monthly_limit}). Try again next month."
             ),
         )
 
@@ -233,28 +239,28 @@ def _page_count_for_note(note: Note) -> int:
         return 0
 
 
-def _enforce_page_limit(note: Note) -> None:
+def _enforce_page_limit(note: Note, *, max_pages: int) -> None:
     pages = _page_count_for_note(note)
-    if pages > settings.PAPER_MAX_PAGES:
+    if pages > max_pages:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=(
                 f"Note has {pages} pages; max allowed per create is "
-                f"{settings.PAPER_MAX_PAGES}. Use a shorter PDF for V1."
+                f"{max_pages}. Use a shorter PDF for V1."
             ),
         )
 
 
-def _enforce_batch_page_limit(notes: list[Note]) -> None:
+def _enforce_batch_page_limit(notes: list[Note], *, max_pages: int) -> None:
     total = 0
     for note in notes:
         total += _page_count_for_note(note)
-    if total > settings.PAPER_MAX_PAGES:
+    if total > max_pages:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=(
                 f"Batch has about {total} pages across notes; max allowed per create is "
-                f"{settings.PAPER_MAX_PAGES}. Split into a new batch folder."
+                f"{max_pages}. Split into a new batch folder."
             ),
         )
 
@@ -395,8 +401,13 @@ def generate_paper_for_note(
             detail="Note has no English canonical content",
         )
 
-    _enforce_quota(db, user_id=user.id)
-    _enforce_page_limit(note)
+    limits = limits_for(user.account_type)
+    _enforce_quota(
+        db,
+        user_id=user.id,
+        monthly_limit=limits.paper_monthly_create_limit,
+    )
+    _enforce_page_limit(note, max_pages=limits.paper_max_pages)
 
     lang = _resolve_language(user, language)
     if user.preferred_paper_language != lang:
@@ -565,8 +576,13 @@ def generate_paper_for_batches(
             detail="Selected topics have no notes. Upload PDFs first.",
         )
 
-    _enforce_quota(db, user_id=user.id)
-    _enforce_batch_page_limit(notes)
+    limits = limits_for(user.account_type)
+    _enforce_quota(
+        db,
+        user_id=user.id,
+        monthly_limit=limits.paper_monthly_create_limit,
+    )
+    _enforce_batch_page_limit(notes, max_pages=limits.paper_max_pages)
 
     # Auto-process any note that is not Ready (student never taps Process).
     for note in notes:

@@ -30,7 +30,14 @@ class Settings(BaseSettings):
     R2_BUCKET_NAME: str = "examora-notes"
     R2_ENDPOINT: str = ""
 
-    MAX_PDF_SIZE_BYTES: int = 20 * 1024 * 1024  # 20 MB
+    # Phone-scanned PDFs often exceed 20 MB; keep in sync with any reverse-proxy body limit.
+    MAX_PDF_SIZE_BYTES: int = 100 * 1024 * 1024  # 100 MB
+
+    # V2 — in-app camera / image_picker capture limits (mobile uses these when building PDF).
+    # Target ~720p; exact device size may vary — always downscale + JPEG compress before PDF.
+    NOTE_IMAGE_MAX_WIDTH: int = 1280
+    NOTE_IMAGE_MAX_HEIGHT: int = 720
+    NOTE_IMAGE_QUALITY: int = 75  # JPEG quality 1–100
 
     # Phase 3 — cheap AI; full doc = chunk→stitch. Dev: keep NOTE_AI_MAX_CHUNKS=1.
     NOTE_AI_PROVIDER: str = "openai"
@@ -41,7 +48,11 @@ class Settings(BaseSettings):
     NOTE_AI_MAX_OUTPUT_TOKENS: int = 2500
     NOTE_AI_CHUNK_OVERLAP: int = 200
     # Dev default 1 = first chunk only (cheap). Raise (e.g. 20) for full-document.
+    # USER uses base; ADMIN/DEV/TESTER use tier overrides via limits_for().
     NOTE_AI_MAX_CHUNKS: int = 1
+    NOTE_AI_MAX_CHUNKS_ADMIN: int = 200
+    NOTE_AI_MAX_CHUNKS_DEV: int = 50
+    NOTE_AI_MAX_CHUNKS_TESTER: int = 20
     OPENAI_API_KEY: str = ""
     OPENAI_MODEL: str = "gpt-4o-mini"
     OPENAI_BASE_URL: str = "https://api.openai.com/v1"
@@ -51,10 +62,19 @@ class Settings(BaseSettings):
     OCR_PROVIDER: str = "google_vision"  # google_vision | none
     OCR_MIN_TEXT_CHARS: int = 100
     OCR_MAX_PAGES: int = 20
+    OCR_MAX_PAGES_ADMIN: int = 1000
+    OCR_MAX_PAGES_DEV: int = 100
+    OCR_MAX_PAGES_TESTER: int = 50
 
     # Phase 4 — paper generation (keep small while developing)
     PAPER_MONTHLY_CREATE_LIMIT: int = 4
+    PAPER_MONTHLY_CREATE_LIMIT_ADMIN: int = 10000
+    PAPER_MONTHLY_CREATE_LIMIT_DEV: int = 100
+    PAPER_MONTHLY_CREATE_LIMIT_TESTER: int = 20
     PAPER_MAX_PAGES: int = 20
+    PAPER_MAX_PAGES_ADMIN: int = 1000
+    PAPER_MAX_PAGES_DEV: int = 100
+    PAPER_MAX_PAGES_TESTER: int = 50
     PAPER_SIZE_RATIO: float = 0.3
     PAPER_MIN_QUESTIONS: int = 5
     PAPER_MAX_QUESTIONS: int = 15

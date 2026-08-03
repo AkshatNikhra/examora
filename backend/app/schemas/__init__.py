@@ -13,6 +13,7 @@ class UserResponse(BaseModel):
     full_name: str | None = None
     date_of_birth: str | None = None
     preferred_paper_language: str | None = None
+    account_type: str = "USER"
     onboarding_completed: bool = False
     created_at: datetime
 
@@ -24,6 +25,7 @@ class UserResponse(BaseModel):
             full_name=getattr(user, "full_name", None),
             date_of_birth=getattr(user, "date_of_birth", None),
             preferred_paper_language=getattr(user, "preferred_paper_language", None),
+            account_type=(getattr(user, "account_type", None) or "USER"),
             onboarding_completed=bool(getattr(user, "onboarding_completed", 0)),
             created_at=user.created_at,  # type: ignore[attr-defined]
         )
