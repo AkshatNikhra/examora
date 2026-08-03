@@ -1,6 +1,6 @@
 """Exam and batch-folder endpoints."""
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -8,8 +8,10 @@ from app.core.deps import get_current_user
 from app.models import User
 from app.schemas import (
     BatchFolderCreate,
+    BatchFolderRenameRequest,
     BatchFolderResponse,
     ExamCreate,
+    ExamRenameRequest,
     ExamResponse,
     ExamUploadHintResponse,
     GenerateFromTopicsRequest,
@@ -18,6 +20,7 @@ from app.schemas import (
     PaperDetailResponse,
     PaperQuestionResponse,
 )
+from app.services import entity_ops
 from app.services import exams as exams_service
 from app.services import papers as papers_service
 
@@ -31,6 +34,7 @@ def _exam_response(db: Session, exam) -> ExamResponse:
         created_at=exam.created_at,
         batch_count=exams_service.batch_count(db, exam_id=exam.id),
         badge=getattr(exam, "badge", None),
+        can_delete=entity_ops.exam_can_delete(db, exam_id=exam.id),
     )
 
 
@@ -45,6 +49,7 @@ def _batch_response(db: Session, batch) -> BatchFolderResponse:
         has_paper=exams_service.batch_has_paper(db, batch_id=batch.id),
         has_canonical=bool(canonical),
         canonical_preview=canonical[:240] if canonical else None,
+        can_delete=entity_ops.batch_can_delete(db, batch_id=batch.id),
     )
 
 
@@ -110,6 +115,29 @@ def get_exam(
     return _exam_response(db, exam)
 
 
+@router.patch("/exams/{exam_id}", response_model=ExamResponse)
+def rename_exam(
+    exam_id: str,
+    body: ExamRenameRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> ExamResponse:
+    exam = entity_ops.rename_exam(
+        db, exam_id=exam_id, user_id=current_user.id, name=body.name
+    )
+    return _exam_response(db, exam)
+
+
+@router.delete("/exams/{exam_id}", status_code=204)
+def delete_exam(
+    exam_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> Response:
+    entity_ops.delete_exam(db, exam_id=exam_id, user_id=current_user.id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
 @router.get("/exams/{exam_id}/upload-hint", response_model=ExamUploadHintResponse)
 def exam_upload_hint(
     exam_id: str,
@@ -164,6 +192,29 @@ def get_batch(
         db, batch_id=batch_id, user_id=current_user.id
     )
     return _batch_response(db, batch)
+
+
+@router.patch("/batches/{batch_id}", response_model=BatchFolderResponse)
+def rename_batch(
+    batch_id: str,
+    body: BatchFolderRenameRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> BatchFolderResponse:
+    batch = entity_ops.rename_batch(
+        db, batch_id=batch_id, user_id=current_user.id, name=body.name
+    )
+    return _batch_response(db, batch)
+
+
+@router.delete("/batches/{batch_id}", status_code=204)
+def delete_batch(
+    batch_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> Response:
+    entity_ops.delete_batch(db, batch_id=batch_id, user_id=current_user.id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get("/batches/{batch_id}/notes", response_model=list[NoteResponse])

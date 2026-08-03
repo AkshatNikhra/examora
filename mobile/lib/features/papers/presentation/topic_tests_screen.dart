@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/errors/app_failure.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/entity_actions.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../repositories/papers_repository.dart';
 import 'papers_list_screen.dart';
@@ -18,6 +19,36 @@ class TopicTestsScreen extends ConsumerWidget {
 
   final String topicId;
   final TestTopicFolder? initialFolder;
+
+  Future<void> _renameTest(
+    BuildContext context,
+    WidgetRef ref,
+    PaperSummary paper,
+  ) async {
+    final l10n = AppLocalizations.of(context);
+    final title = await showRenameDialog(
+      context,
+      title: l10n.renameTestTitle,
+      label: l10n.renameTestTitle,
+      initialValue: paper.title,
+    );
+    if (title == null) return;
+    try {
+      await ref.read(papersRepositoryProvider).renamePaper(
+            paperId: paper.id,
+            title: title,
+          );
+      ref.invalidate(testTopicFoldersProvider);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.actionSuccessRenamed)),
+      );
+    } catch (error) {
+      if (!context.mounted) return;
+      final message = error is AppFailure ? error.message : l10n.genericError;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -57,7 +88,11 @@ class TopicTestsScreen extends ConsumerWidget {
       body: asyncFolders.when(
         loading: () => folder == null
             ? const Center(child: CircularProgressIndicator())
-            : _TestsList(tests: tests, l10n: l10n),
+            : _TestsList(
+                tests: tests,
+                l10n: l10n,
+                onRename: (paper) => _renameTest(context, ref, paper),
+              ),
         error: (error, _) => folder == null
             ? Center(
                 child: Padding(
@@ -68,7 +103,11 @@ class TopicTestsScreen extends ConsumerWidget {
                   ),
                 ),
               )
-            : _TestsList(tests: tests, l10n: l10n),
+            : _TestsList(
+                tests: tests,
+                l10n: l10n,
+                onRename: (paper) => _renameTest(context, ref, paper),
+              ),
         data: (_) {
           if (tests.isEmpty) {
             return Center(
@@ -90,7 +129,11 @@ class TopicTestsScreen extends ConsumerWidget {
               ref.invalidate(testTopicFoldersProvider);
               await ref.read(testTopicFoldersProvider.future);
             },
-            child: _TestsList(tests: tests, l10n: l10n),
+            child: _TestsList(
+              tests: tests,
+              l10n: l10n,
+              onRename: (paper) => _renameTest(context, ref, paper),
+            ),
           );
         },
       ),
@@ -99,10 +142,15 @@ class TopicTestsScreen extends ConsumerWidget {
 }
 
 class _TestsList extends StatelessWidget {
-  const _TestsList({required this.tests, required this.l10n});
+  const _TestsList({
+    required this.tests,
+    required this.l10n,
+    required this.onRename,
+  });
 
   final List<PaperSummary> tests;
   final AppLocalizations l10n;
+  final void Function(PaperSummary paper) onRename;
 
   @override
   Widget build(BuildContext context) {
@@ -145,7 +193,17 @@ class _TestsList extends StatelessWidget {
                 ),
               ),
             ),
-            trailing: const Icon(Icons.chevron_right),
+            trailing: PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'rename') onRename(paper);
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'rename',
+                  child: Text(l10n.rename),
+                ),
+              ],
+            ),
             onTap: () => context.push('/papers/${paper.id}'),
           ),
         );

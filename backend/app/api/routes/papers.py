@@ -12,10 +12,12 @@ from app.schemas import (
     AttemptSubmitRequest,
     PaperDetailResponse,
     PaperQuestionResponse,
+    PaperRenameRequest,
     PaperSummaryResponse,
     TestTopicFolderResponse,
 )
 from app.services import attempts as attempts_service
+from app.services import entity_ops
 from app.services import papers as papers_service
 
 router = APIRouter(prefix="/papers", tags=["papers"])
@@ -127,6 +129,19 @@ def get_paper(
         user_id=current_user.id,
     )
     return _detail(db, paper)
+
+
+@router.patch("/{paper_id}", response_model=PaperSummaryResponse)
+def rename_paper(
+    paper_id: str,
+    body: PaperRenameRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> PaperSummaryResponse:
+    paper = entity_ops.rename_paper(
+        db, paper_id=paper_id, user_id=current_user.id, title=body.title
+    )
+    return _summary(paper)
 
 
 @router.post("/{paper_id}/attempts", response_model=AttemptResponse)

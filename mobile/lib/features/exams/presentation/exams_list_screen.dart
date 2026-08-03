@@ -4,8 +4,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/errors/app_failure.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/entity_actions.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../repositories/exams_repository.dart';
+import '../../../repositories/me_repository.dart';
+import '../../papers/presentation/papers_list_screen.dart';
 
 final examsListProvider = FutureProvider.autoDispose<List<ExamItem>>((ref) {
   return ref.watch(examsRepositoryProvider).listExams();
@@ -45,7 +48,75 @@ class ExamsListScreen extends ConsumerWidget {
     try {
       final exam = await ref.read(examsRepositoryProvider).createExam(name);
       ref.invalidate(examsListProvider);
+      ref.invalidate(homeSummaryProvider);
       if (context.mounted) context.push('/exams/${exam.id}');
+    } catch (error) {
+      if (!context.mounted) return;
+      final message = error is AppFailure ? error.message : l10n.genericError;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    }
+  }
+
+  Future<void> _renameExam(
+    BuildContext context,
+    WidgetRef ref,
+    ExamItem exam,
+  ) async {
+    final l10n = AppLocalizations.of(context);
+    final name = await showRenameDialog(
+      context,
+      title: l10n.renameExamTitle,
+      label: l10n.setupExamFieldLabel,
+      initialValue: exam.name,
+    );
+    if (name == null) return;
+    try {
+      await ref.read(examsRepositoryProvider).renameExam(
+            examId: exam.id,
+            name: name,
+          );
+      ref.invalidate(examsListProvider);
+      ref.invalidate(homeSummaryProvider);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.actionSuccessRenamed)),
+      );
+    } catch (error) {
+      if (!context.mounted) return;
+      final message = error is AppFailure ? error.message : l10n.genericError;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    }
+  }
+
+  Future<void> _deleteExam(
+    BuildContext context,
+    WidgetRef ref,
+    ExamItem exam,
+  ) async {
+    final l10n = AppLocalizations.of(context);
+    if (!exam.canDelete) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.cannotDeleteWithReady)),
+      );
+      return;
+    }
+    final confirmed = await showConfirmDeleteDialog(
+      context,
+      title: l10n.deleteExamTitle,
+      message: exam.batchCount == 0
+          ? l10n.deleteExamEmptyMessage
+          : l10n.deleteExamMessage,
+    );
+    if (!confirmed) return;
+    try {
+      await ref.read(examsRepositoryProvider).deleteExam(exam.id);
+      ref.invalidate(examsListProvider);
+      ref.invalidate(homeSummaryProvider);
+      ref.invalidate(testTopicFoldersProvider);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.actionSuccessDeleted)),
+      );
     } catch (error) {
       if (!context.mounted) return;
       final message = error is AppFailure ? error.message : l10n.genericError;
@@ -151,7 +222,33 @@ class ExamsListScreen extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    trailing: const Icon(Icons.chevron_right),
+                    trailing: PopupMenuButton<String>(
+                      onSelected: (value) {
+                        if (value == 'rename') {
+                          _renameExam(context, ref, exam);
+                        } else if (value == 'delete') {
+                          _deleteExam(context, ref, exam);
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        PopupMenuItem(
+                          value: 'rename',
+                          child: Text(l10n.rename),
+                        ),
+                        PopupMenuItem(
+                          value: 'delete',
+                          enabled: exam.canDelete,
+                          child: Text(
+                            l10n.delete,
+                            style: TextStyle(
+                              color: exam.canDelete
+                                  ? theme.colorScheme.error
+                                  : theme.disabledColor,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                     onTap: () => context.push('/exams/${exam.id}'),
                   ),
                 );

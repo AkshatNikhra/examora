@@ -7,13 +7,17 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/errors/app_failure.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/create_test_notice.dart';
+import '../../../core/widgets/entity_actions.dart';
 import '../../../features/notes/presentation/open_note_pdf.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../repositories/exams_repository.dart';
 import '../../../repositories/me_repository.dart';
 import '../../../repositories/notes_repository.dart';
 import '../../../repositories/papers_repository.dart';
+import '../../papers/presentation/papers_list_screen.dart';
 import 'exam_detail_screen.dart';
+import 'exams_list_screen.dart';
 
 final batchDetailProvider =
     FutureProvider.autoDispose.family<BatchItem, String>((ref, batchId) {
@@ -97,6 +101,12 @@ class _BatchDetailScreenState extends ConsumerState<BatchDetailScreen> {
           );
       ref.invalidate(batchNotesProvider(widget.batchId));
       ref.invalidate(batchDetailProvider(widget.batchId));
+      final examId =
+          ref.read(batchDetailProvider(widget.batchId)).valueOrNull?.examId;
+      if (examId != null) {
+        ref.invalidate(examBatchesProvider(examId));
+        ref.invalidate(examUploadHintProvider(examId));
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.notesUploadSuccess)),
@@ -139,25 +149,37 @@ class _BatchDetailScreenState extends ConsumerState<BatchDetailScreen> {
   }
 
   Future<void> _createTest() async {
+    if (_generating) return;
     final l10n = AppLocalizations.of(context);
-    final language = await _pickLanguage();
-    if (language == null || !mounted) return;
 
     setState(() => _generating = true);
     try {
-      final paper = await ref.read(papersRepositoryProvider).generatePaperFromBatch(
+      final proceed = await showCreateTestNoticesIfNeeded(
+        context,
+        quota: ref.read(homeSummaryProvider).valueOrNull?.paperQuota,
+      );
+      if (!proceed || !mounted) return;
+
+      final language = await _pickLanguage();
+      if (language == null || !mounted) return;
+
+      await ref.read(papersRepositoryProvider).generatePaperFromBatch(
             batchId: widget.batchId,
             language: language,
           );
       ref.invalidate(batchDetailProvider(widget.batchId));
       ref.invalidate(homeSummaryProvider);
+      ref.invalidate(testTopicFoldersProvider);
       final examId = ref.read(batchDetailProvider(widget.batchId)).valueOrNull?.examId;
       if (examId != null) {
         ref.invalidate(examBatchesProvider(examId));
         ref.invalidate(examUploadHintProvider(examId));
       }
       if (!mounted) return;
-      context.push('/papers/${paper.id}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.createTestReadyGoToTests)),
+      );
+      context.go('/app/tests');
     } catch (error) {
       if (!mounted) return;
       final message = error is AppFailure ? error.message : l10n.genericError;
@@ -174,6 +196,127 @@ class _BatchDetailScreenState extends ConsumerState<BatchDetailScreen> {
       'failed' => l10n.notesStatusFailed,
       _ => l10n.notesStatusUploaded,
     };
+  }
+
+  Future<void> _renameBatch(BatchItem batch) async {
+    final l10n = AppLocalizations.of(context);
+    final name = await showRenameDialog(
+      context,
+      title: l10n.renameTopicTitle,
+      label: l10n.batchNameLabel,
+      initialValue: batch.name,
+    );
+    if (name == null) return;
+    try {
+      await ref.read(examsRepositoryProvider).renameBatch(
+            batchId: batch.id,
+            name: name,
+          );
+      ref.invalidate(batchDetailProvider(widget.batchId));
+      ref.invalidate(examBatchesProvider(batch.examId));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.actionSuccessRenamed)),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      final message = error is AppFailure ? error.message : l10n.genericError;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    }
+  }
+
+  Future<void> _deleteBatch(BatchItem batch) async {
+    final l10n = AppLocalizations.of(context);
+    if (!batch.canDelete) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.cannotDeleteWithReady)),
+      );
+      return;
+    }
+    final confirmed = await showConfirmDeleteDialog(
+      context,
+      title: l10n.deleteTopicTitle,
+      message: l10n.deleteTopicMessage,
+    );
+    if (!confirmed) return;
+    try {
+      final examId = batch.examId;
+      await ref.read(examsRepositoryProvider).deleteBatch(batch.id);
+      ref.invalidate(examBatchesProvider(examId));
+      ref.invalidate(examDetailProvider(examId));
+      ref.invalidate(examsListProvider);
+      ref.invalidate(homeSummaryProvider);
+      ref.invalidate(testTopicFoldersProvider);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.actionSuccessDeleted)),
+      );
+      context.go('/exams/$examId');
+    } catch (error) {
+      if (!mounted) return;
+      final message = error is AppFailure ? error.message : l10n.genericError;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    }
+  }
+
+  Future<void> _renameNote(NoteItem note) async {
+    final l10n = AppLocalizations.of(context);
+    final title = await showRenameDialog(
+      context,
+      title: l10n.renameNoteTitle,
+      label: l10n.noteNameLabel,
+      initialValue: note.title,
+    );
+    if (title == null) return;
+    try {
+      await ref.read(notesRepositoryProvider).renameNote(
+            noteId: note.id,
+            title: title,
+          );
+      ref.invalidate(batchNotesProvider(widget.batchId));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.actionSuccessRenamed)),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      final message = error is AppFailure ? error.message : l10n.genericError;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    }
+  }
+
+  Future<void> _deleteNote(NoteItem note) async {
+    final l10n = AppLocalizations.of(context);
+    if (!note.canDelete) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.cannotDeleteReadyNote)),
+      );
+      return;
+    }
+    final confirmed = await showConfirmDeleteDialog(
+      context,
+      title: l10n.deleteNoteTitle,
+      message: l10n.deleteNoteMessage,
+    );
+    if (!confirmed) return;
+    try {
+      final examId =
+          ref.read(batchDetailProvider(widget.batchId)).valueOrNull?.examId;
+      await ref.read(notesRepositoryProvider).deleteNote(note.id);
+      ref.invalidate(batchNotesProvider(widget.batchId));
+      ref.invalidate(batchDetailProvider(widget.batchId));
+      if (examId != null) {
+        ref.invalidate(examBatchesProvider(examId));
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.actionSuccessDeleted)),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      final message = error is AppFailure ? error.message : l10n.genericError;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    }
   }
 
   @override
@@ -210,6 +353,35 @@ class _BatchDetailScreenState extends ConsumerState<BatchDetailScreen> {
           fontSize: 26,
           fontWeight: FontWeight.w800,
         ),
+        actions: [
+          asyncBatch.maybeWhen(
+            data: (batch) => PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'rename') {
+                  _renameBatch(batch);
+                } else if (value == 'delete') {
+                  _deleteBatch(batch);
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(value: 'rename', child: Text(l10n.rename)),
+                PopupMenuItem(
+                  value: 'delete',
+                  enabled: batch.canDelete,
+                  child: Text(
+                    l10n.delete,
+                    style: TextStyle(
+                      color: batch.canDelete
+                          ? theme.colorScheme.error
+                          : theme.disabledColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            orElse: () => const SizedBox.shrink(),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _uploading ? null : _pickAndUpload,
@@ -273,7 +445,7 @@ class _BatchDetailScreenState extends ConsumerState<BatchDetailScreen> {
                         const SizedBox(height: 8),
                         Text(
                           quotaExhausted
-                              ? l10n.paperQuotaExhausted
+                              ? l10n.paperQuotaExhausted(quota.windowDays)
                               : l10n.paperQuotaRemaining(
                                   quota.remaining,
                                   quota.limit,
@@ -311,7 +483,33 @@ class _BatchDetailScreenState extends ConsumerState<BatchDetailScreen> {
                             child: ListTile(
                               title: Text(note.title),
                               subtitle: Text(_statusLabel(l10n, note.status)),
-                              trailing: const Icon(Icons.chevron_right),
+                              trailing: PopupMenuButton<String>(
+                                onSelected: (value) {
+                                  if (value == 'rename') {
+                                    _renameNote(note);
+                                  } else if (value == 'delete') {
+                                    _deleteNote(note);
+                                  }
+                                },
+                                itemBuilder: (context) => [
+                                  PopupMenuItem(
+                                    value: 'rename',
+                                    child: Text(l10n.rename),
+                                  ),
+                                  PopupMenuItem(
+                                    value: 'delete',
+                                    enabled: note.canDelete,
+                                    child: Text(
+                                      l10n.delete,
+                                      style: TextStyle(
+                                        color: note.canDelete
+                                            ? theme.colorScheme.error
+                                            : theme.disabledColor,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                               onTap: () => openNoteInPdfApp(
                                 context,
                                 ref,

@@ -1,6 +1,6 @@
 """Notes upload, listing, and processing endpoints."""
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, UploadFile, status
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
@@ -11,11 +11,13 @@ from app.models import Note, NoteStatus, User
 from app.schemas import (
     GeneratePaperRequest,
     NoteFileUrlResponse,
+    NoteRenameRequest,
     NoteResponse,
     NoteStatusResponse,
     PaperDetailResponse,
     PaperQuestionResponse,
 )
+from app.services import entity_ops
 from app.services import note_processing, notes as notes_service
 from app.services import papers as papers_service
 from app.services.r2 import download_pdf, presign_pdf_get_url
@@ -215,3 +217,26 @@ def get_note(
         user_id=current_user.id,
     )
     return _to_response(note)
+
+
+@router.patch("/{note_id}", response_model=NoteResponse)
+def rename_note(
+    note_id: str,
+    body: NoteRenameRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> NoteResponse:
+    note = entity_ops.rename_note(
+        db, note_id=note_id, user_id=current_user.id, title=body.title
+    )
+    return _to_response(note)
+
+
+@router.delete("/{note_id}", status_code=204)
+def delete_note(
+    note_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> Response:
+    entity_ops.delete_note(db, note_id=note_id, user_id=current_user.id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

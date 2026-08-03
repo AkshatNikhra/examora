@@ -18,6 +18,7 @@ class NoteItem {
     this.errorMessage,
     this.hasCanonical = false,
     this.sourceLanguage,
+    this.canDelete = true,
   });
 
   final String id;
@@ -29,18 +30,21 @@ class NoteItem {
   final String? errorMessage;
   final bool hasCanonical;
   final String? sourceLanguage;
+  final bool canDelete;
 
   factory NoteItem.fromJson(Map<String, dynamic> json) {
+    final status = json['status'] as String? ?? 'uploaded';
     return NoteItem(
       id: json['id'] as String,
       title: json['title'] as String,
       fileUrl: json['file_url'] as String,
       language: json['language'] as String? ?? 'en',
-      status: json['status'] as String? ?? 'uploaded',
+      status: status,
       createdAt: DateTime.parse(json['created_at'] as String),
       errorMessage: json['error_message'] as String?,
       hasCanonical: json['has_canonical'] as bool? ?? false,
       sourceLanguage: json['source_language'] as String?,
+      canDelete: json['can_delete'] as bool? ?? (status != 'ready'),
     );
   }
 }
@@ -56,6 +60,7 @@ class NoteDetail extends NoteItem {
     super.errorMessage,
     super.hasCanonical,
     super.sourceLanguage,
+    super.canDelete,
     this.rawExtractedText,
     this.canonicalContentEn,
   });
@@ -75,6 +80,7 @@ class NoteDetail extends NoteItem {
       errorMessage: base.errorMessage,
       hasCanonical: base.hasCanonical,
       sourceLanguage: base.sourceLanguage,
+      canDelete: base.canDelete,
       rawExtractedText: json['raw_extracted_text'] as String?,
       canonicalContentEn: json['canonical_content_en'] as String?,
     );
@@ -166,6 +172,37 @@ class NotesRepository {
         throw const ServerFailure('Empty process response');
       }
       return NoteItem.fromJson(data);
+    } on DioException catch (error) {
+      throw NetworkFailure(_dioMessage(error));
+    } catch (error) {
+      if (error is AppFailure) rethrow;
+      throw UnexpectedFailure(error.toString());
+    }
+  }
+
+  Future<NoteItem> renameNote({
+    required String noteId,
+    required String title,
+  }) async {
+    try {
+      final response = await _dio.patch<Map<String, dynamic>>(
+        '/notes/$noteId',
+        data: {'title': title},
+      );
+      final data = response.data;
+      if (data == null) throw const ServerFailure('Empty note response');
+      return NoteItem.fromJson(data);
+    } on DioException catch (error) {
+      throw NetworkFailure(_dioMessage(error));
+    } catch (error) {
+      if (error is AppFailure) rethrow;
+      throw UnexpectedFailure(error.toString());
+    }
+  }
+
+  Future<void> deleteNote(String noteId) async {
+    try {
+      await _dio.delete<void>('/notes/$noteId');
     } on DioException catch (error) {
       throw NetworkFailure(_dioMessage(error));
     } catch (error) {

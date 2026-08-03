@@ -80,24 +80,31 @@ class NoteResponse(BaseModel):
     created_at: datetime
     has_canonical: bool = False
     batch_folder_id: str | None = None
+    can_delete: bool = True
 
     @classmethod
     def from_note(cls, note: object) -> "NoteResponse":
         canonical = getattr(note, "canonical_content_en", None)
+        status = note.status  # type: ignore[attr-defined]
         return cls(
             id=note.id,  # type: ignore[attr-defined]
             user_id=note.user_id,  # type: ignore[attr-defined]
             title=note.title,  # type: ignore[attr-defined]
             file_url=note.file_url,  # type: ignore[attr-defined]
             language=note.language,  # type: ignore[attr-defined]
-            status=note.status,  # type: ignore[attr-defined]
+            status=status,
             source_language=getattr(note, "source_language", None),
             error_message=getattr(note, "error_message", None),
             processed_at=getattr(note, "processed_at", None),
             created_at=note.created_at,  # type: ignore[attr-defined]
             has_canonical=bool(canonical and str(canonical).strip()),
             batch_folder_id=getattr(note, "batch_folder_id", None),
+            can_delete=str(status) != "ready",
         )
+
+
+class NoteRenameRequest(BaseModel):
+    title: str = Field(..., min_length=1, max_length=255)
 
 
 class NoteFileUrlResponse(BaseModel):
@@ -165,6 +172,10 @@ class PaperSummaryResponse(BaseModel):
     created_at: datetime
 
 
+class PaperRenameRequest(BaseModel):
+    title: str = Field(..., min_length=1, max_length=255)
+
+
 class TestTopicFolderResponse(BaseModel):
     topic_id: str
     topic_name: str
@@ -212,6 +223,10 @@ class ExamCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
 
 
+class ExamRenameRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=255)
+
+
 class ExamResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -220,9 +235,14 @@ class ExamResponse(BaseModel):
     created_at: datetime
     batch_count: int = 0
     badge: str | None = None
+    can_delete: bool = True
 
 
 class BatchFolderCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=255)
+
+
+class BatchFolderRenameRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
 
 
@@ -241,6 +261,7 @@ class BatchFolderResponse(BaseModel):
         default=None,
         description="First ~240 chars of topic English canonical content when ready",
     )
+    can_delete: bool = True
 
 
 class ExamUploadHintResponse(BaseModel):
@@ -257,12 +278,17 @@ class HomeActivityItem(BaseModel):
 
 
 class PaperQuotaResponse(BaseModel):
-    """Monthly practice-paper create quota for the current account."""
+    """Rolling practice-paper create quota for the current account.
+
+    Each create occupies a slot for ``window_days`` from that paper's created_at.
+    ``resets_at`` is when the next slot frees (oldest active create ages out).
+    """
 
     used: int
     limit: int
     remaining: int
     resets_at: datetime
+    window_days: int = 30
 
 
 class HomeSummaryResponse(BaseModel):

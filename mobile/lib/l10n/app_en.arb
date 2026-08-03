@@ -444,21 +444,149 @@
   "@topicsSelectNone": {
     "description": "Snack when no topics selected"
   },
-  "paperQuotaRemaining": "{remaining} of {limit} tests left this month",
+  "topicsSelectEmptyTopic": "Upload notes to a topic before selecting it for a test",
+  "@topicsSelectEmptyTopic": {
+    "description": "Snack when selecting a topic with zero notes"
+  },
+  "createTestNoticeTitle": "Creating your test",
+  "@createTestNoticeTitle": {
+    "description": "Title for create-test time notice dialog"
+  },
+  "createTestNoticeBody": "MCQ creation might take time. Check in the Tests tab after some time.",
+  "@createTestNoticeBody": {
+    "description": "Body for create-test time notice dialog"
+  },
+  "createTestNoticeDontShowAgain": "Don't show again",
+  "@createTestNoticeDontShowAgain": {
+    "description": "Checkbox to suppress create-test time notice"
+  },
+  "createTestNoticeClose": "Close",
+  "@createTestNoticeClose": {
+    "description": "Close button on create-test time notice"
+  },
+  "createTestQuotaNoticeTitle": "Test create limit",
+  "@createTestQuotaNoticeTitle": {
+    "description": "Title for create-test quota notice dialog"
+  },
+  "createTestQuotaNoticeBody": "{limit} creates allowed. After this, {remainingAfter} would be left. If it goes to zero, a slot restores in {days} days.",
+  "@createTestQuotaNoticeBody": {
+    "description": "Body explaining quota before create-test",
+    "placeholders": {
+      "limit": {"type": "int"},
+      "remainingAfter": {"type": "int"},
+      "days": {"type": "int"}
+    }
+  },
+  "createTestReadyGoToTests": "Test ready. Open it from the Tests tab to attempt.",
+  "@createTestReadyGoToTests": {
+    "description": "Snack after create succeeds; user opens test from Tests tab"
+  },
+  "paperQuotaRemaining": "{remaining} of {limit} tests left",
   "@paperQuotaRemaining": {
-    "description": "Remaining monthly paper creates under create CTA",
+    "description": "Remaining rolling paper creates under create CTA",
     "placeholders": {
       "remaining": {"type": "int"},
       "limit": {"type": "int"}
     }
   },
-  "paperQuotaExhausted": "No tests left this month. Resets next month.",
+  "paperQuotaExhausted": "No tests left. A slot frees {days} days after each create.",
   "@paperQuotaExhausted": {
-    "description": "Shown when monthly create quota is used up"
+    "description": "Shown when rolling create quota is used up",
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "paperQuotaInfo": "You can create up to {limit} practice tests. Each create uses 1 slot for {days} days from when that test is created — then the slot restores. You never have more than {limit} active creates at once.",
+  "@paperQuotaInfo": {
+    "description": "Explains rolling 30-day restore for paper creates",
+    "placeholders": {
+      "limit": {"type": "int"},
+      "days": {"type": "int"}
+    }
   },
   "homeStatTestsLeft": "Tests Left",
   "@homeStatTestsLeft": {
     "description": "Home stats card label for remaining creates"
+  },
+  "rename": "Rename",
+  "@rename": {
+    "description": "Rename action in overflow menu"
+  },
+  "renameConfirm": "Save",
+  "@renameConfirm": {
+    "description": "Confirm rename dialog"
+  },
+  "delete": "Delete",
+  "@delete": {
+    "description": "Delete action in overflow menu"
+  },
+  "deleteConfirm": "Delete",
+  "@deleteConfirm": {
+    "description": "Confirm delete button"
+  },
+  "renameExamTitle": "Rename exam",
+  "@renameExamTitle": {
+    "description": "Dialog title for renaming exam"
+  },
+  "renameTopicTitle": "Rename topic",
+  "@renameTopicTitle": {
+    "description": "Dialog title for renaming topic"
+  },
+  "renameNoteTitle": "Rename note",
+  "@renameNoteTitle": {
+    "description": "Dialog title for renaming note"
+  },
+  "noteNameLabel": "Note title",
+  "@noteNameLabel": {
+    "description": "Field label when renaming a note"
+  },
+  "renameTestTitle": "Rename test",
+  "@renameTestTitle": {
+    "description": "Dialog title for renaming practice test"
+  },
+  "deleteExamTitle": "Delete exam?",
+  "@deleteExamTitle": {
+    "description": "Confirm delete exam title"
+  },
+  "deleteExamMessage": "This removes the exam and any topics/notes that are not Ready. Ready notes block deletion.",
+  "@deleteExamMessage": {
+    "description": "Confirm delete exam body"
+  },
+  "deleteExamEmptyMessage": "Remove this exam from your list?",
+  "@deleteExamEmptyMessage": {
+    "description": "Confirm delete empty exam"
+  },
+  "deleteTopicTitle": "Delete topic?",
+  "@deleteTopicTitle": {
+    "description": "Confirm delete topic title"
+  },
+  "deleteTopicMessage": "This deletes the topic and any notes that are not Ready. Notes in Ready state cannot be deleted.",
+  "@deleteTopicMessage": {
+    "description": "Confirm delete topic body"
+  },
+  "deleteNoteTitle": "Delete note?",
+  "@deleteNoteTitle": {
+    "description": "Confirm delete note title"
+  },
+  "deleteNoteMessage": "This permanently removes the uploaded PDF.",
+  "@deleteNoteMessage": {
+    "description": "Confirm delete note body"
+  },
+  "cannotDeleteReadyNote": "Ready notes cannot be deleted — they power your topics and tests.",
+  "@cannotDeleteReadyNote": {
+    "description": "Shown when user tries to delete a Ready note"
+  },
+  "cannotDeleteWithReady": "Cannot delete while a Ready note is present.",
+  "@cannotDeleteWithReady": {
+    "description": "Shown when exam/topic delete is blocked"
+  },
+  "actionSuccessDeleted": "Deleted",
+  "@actionSuccessDeleted": {
+    "description": "Snack after successful delete"
+  },
+  "actionSuccessRenamed": "Renamed",
+  "@actionSuccessRenamed": {
+    "description": "Snack after successful rename"
   }
 }
 

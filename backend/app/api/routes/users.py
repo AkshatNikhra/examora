@@ -142,6 +142,8 @@ def home_summary(
     db: Session = Depends(get_db),
 ) -> HomeSummaryResponse:
     exams = exams_service.list_exams(db, user_id=current_user.id)
+    from app.services import entity_ops
+
     exam_responses = [
         ExamResponse(
             id=e.id,
@@ -149,6 +151,7 @@ def home_summary(
             created_at=e.created_at,
             batch_count=exams_service.batch_count(db, exam_id=e.id),
             badge=getattr(e, "badge", None),
+            can_delete=entity_ops.exam_can_delete(db, exam_id=e.id),
         )
         for e in exams
     ]

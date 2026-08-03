@@ -68,6 +68,19 @@ def download_pdf(*, key: str) -> bytes:
     return body
 
 
+def delete_pdf(*, key: str) -> None:
+    """Best-effort delete of a PDF object from R2 (ignore missing credentials/objects)."""
+    cleaned = (key or "").strip()
+    if not cleaned:
+        return
+    try:
+        client = get_r2_client()
+        client.delete_object(Bucket=settings.R2_BUCKET_NAME, Key=cleaned)
+    except Exception:  # noqa: BLE001
+        # Deletion should not fail the DB cascade if storage is down / unconfigured.
+        return
+
+
 def presign_pdf_get_url(*, key: str, expires_in: int = 300) -> str:
     """Short-lived HTTPS URL so the mobile OS can open the PDF in an external app."""
     client = get_r2_client()

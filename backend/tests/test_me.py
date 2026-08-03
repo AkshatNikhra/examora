@@ -58,6 +58,8 @@ def test_me_summary_includes_paper_quota(
     assert quota["used"] == 0
     assert quota["limit"] == 4
     assert quota["remaining"] == 4
+    assert quota.get("window_days", 30) == 30
     resets = datetime.fromisoformat(quota["resets_at"].replace("Z", "+00:00"))
     assert resets.tzinfo is not None
-    assert resets > datetime.now(timezone.utc)
+    # No active creates → next slot is effectively now (rolling window).
+    assert abs((resets - datetime.now(timezone.utc)).total_seconds()) < 5

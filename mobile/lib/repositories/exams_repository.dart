@@ -11,12 +11,14 @@ class ExamItem {
     required this.name,
     required this.createdAt,
     this.batchCount = 0,
+    this.canDelete = true,
   });
 
   final String id;
   final String name;
   final DateTime createdAt;
   final int batchCount;
+  final bool canDelete;
 
   factory ExamItem.fromJson(Map<String, dynamic> json) {
     return ExamItem(
@@ -24,6 +26,7 @@ class ExamItem {
       name: json['name'] as String? ?? '',
       createdAt: DateTime.parse(json['created_at'] as String),
       batchCount: json['batch_count'] as int? ?? 0,
+      canDelete: json['can_delete'] as bool? ?? true,
     );
   }
 }
@@ -36,6 +39,7 @@ class BatchItem {
     required this.createdAt,
     this.noteCount = 0,
     this.hasPaper = false,
+    this.canDelete = true,
   });
 
   final String id;
@@ -44,6 +48,7 @@ class BatchItem {
   final DateTime createdAt;
   final int noteCount;
   final bool hasPaper;
+  final bool canDelete;
 
   factory BatchItem.fromJson(Map<String, dynamic> json) {
     return BatchItem(
@@ -53,6 +58,7 @@ class BatchItem {
       createdAt: DateTime.parse(json['created_at'] as String),
       noteCount: json['note_count'] as int? ?? 0,
       hasPaper: json['has_paper'] as bool? ?? false,
+      canDelete: json['can_delete'] as bool? ?? true,
     );
   }
 }
@@ -118,6 +124,37 @@ class ExamsRepository {
     }
   }
 
+  Future<ExamItem> renameExam({
+    required String examId,
+    required String name,
+  }) async {
+    try {
+      final response = await _dio.patch<Map<String, dynamic>>(
+        '/exams/$examId',
+        data: {'name': name},
+      );
+      final data = response.data;
+      if (data == null) throw const ServerFailure('Empty exam response');
+      return ExamItem.fromJson(data);
+    } on DioException catch (error) {
+      throw NetworkFailure(_dioMessage(error));
+    } catch (error) {
+      if (error is AppFailure) rethrow;
+      throw UnexpectedFailure(error.toString());
+    }
+  }
+
+  Future<void> deleteExam(String examId) async {
+    try {
+      await _dio.delete<void>('/exams/$examId');
+    } on DioException catch (error) {
+      throw NetworkFailure(_dioMessage(error));
+    } catch (error) {
+      if (error is AppFailure) rethrow;
+      throw UnexpectedFailure(error.toString());
+    }
+  }
+
   Future<ExamItem> getExam(String examId) async {
     try {
       final response = await _dio.get<Map<String, dynamic>>('/exams/$examId');
@@ -160,6 +197,37 @@ class ExamsRepository {
       final data = response.data;
       if (data == null) throw const ServerFailure('Empty batch response');
       return BatchItem.fromJson(data);
+    } on DioException catch (error) {
+      throw NetworkFailure(_dioMessage(error));
+    } catch (error) {
+      if (error is AppFailure) rethrow;
+      throw UnexpectedFailure(error.toString());
+    }
+  }
+
+  Future<BatchItem> renameBatch({
+    required String batchId,
+    required String name,
+  }) async {
+    try {
+      final response = await _dio.patch<Map<String, dynamic>>(
+        '/batches/$batchId',
+        data: {'name': name},
+      );
+      final data = response.data;
+      if (data == null) throw const ServerFailure('Empty batch response');
+      return BatchItem.fromJson(data);
+    } on DioException catch (error) {
+      throw NetworkFailure(_dioMessage(error));
+    } catch (error) {
+      if (error is AppFailure) rethrow;
+      throw UnexpectedFailure(error.toString());
+    }
+  }
+
+  Future<void> deleteBatch(String batchId) async {
+    try {
+      await _dio.delete<void>('/batches/$batchId');
     } on DioException catch (error) {
       throw NetworkFailure(_dioMessage(error));
     } catch (error) {

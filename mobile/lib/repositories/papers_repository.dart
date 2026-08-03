@@ -360,6 +360,26 @@ class PapersRepository {
     }
   }
 
+  Future<PaperSummary> renamePaper({
+    required String paperId,
+    required String title,
+  }) async {
+    try {
+      final response = await _dio.patch<Map<String, dynamic>>(
+        '/papers/$paperId',
+        data: {'title': title},
+      );
+      final data = response.data;
+      if (data == null) throw const ServerFailure('Empty paper response');
+      return PaperSummary.fromJson(data);
+    } on DioException catch (error) {
+      throw NetworkFailure(_dioMessage(error));
+    } catch (error) {
+      if (error is AppFailure) rethrow;
+      throw UnexpectedFailure(error.toString());
+    }
+  }
+
   Future<AttemptResult> submitAttempt({
     required String paperId,
     required Map<String, int> selectedByQuestionId,

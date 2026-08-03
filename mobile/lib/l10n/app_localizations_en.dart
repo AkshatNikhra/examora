@@ -350,14 +350,113 @@ class AppLocalizationsEn extends AppLocalizations {
   String get topicsSelectNone => 'Select at least one topic';
 
   @override
-  String paperQuotaRemaining(int remaining, int limit) {
-    return '$remaining of $limit tests left this month';
+  String get topicsSelectEmptyTopic =>
+      'Upload notes to a topic before selecting it for a test';
+
+  @override
+  String get createTestNoticeTitle => 'Creating your test';
+
+  @override
+  String get createTestNoticeBody =>
+      'MCQ creation might take time. Check in the Tests tab after some time.';
+
+  @override
+  String get createTestNoticeDontShowAgain => 'Don\'t show again';
+
+  @override
+  String get createTestNoticeClose => 'Close';
+
+  @override
+  String get createTestQuotaNoticeTitle => 'Test create limit';
+
+  @override
+  String createTestQuotaNoticeBody(int limit, int remainingAfter, int days) {
+    return '$limit creates allowed. After this, $remainingAfter would be left. If it goes to zero, a slot restores in $days days.';
   }
 
   @override
-  String get paperQuotaExhausted =>
-      'No tests left this month. Resets next month.';
+  String get createTestReadyGoToTests =>
+      'Test ready. Open it from the Tests tab to attempt.';
+
+  @override
+  String paperQuotaRemaining(int remaining, int limit) {
+    return '$remaining of $limit tests left';
+  }
+
+  @override
+  String paperQuotaExhausted(int days) {
+    return 'No tests left. A slot frees $days days after each create.';
+  }
+
+  @override
+  String paperQuotaInfo(int limit, int days) {
+    return 'You can create up to $limit practice tests. Each create uses 1 slot for $days days from when that test is created — then the slot restores. You never have more than $limit active creates at once.';
+  }
 
   @override
   String get homeStatTestsLeft => 'Tests Left';
+
+  @override
+  String get rename => 'Rename';
+
+  @override
+  String get renameConfirm => 'Save';
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get deleteConfirm => 'Delete';
+
+  @override
+  String get renameExamTitle => 'Rename exam';
+
+  @override
+  String get renameTopicTitle => 'Rename topic';
+
+  @override
+  String get renameNoteTitle => 'Rename note';
+
+  @override
+  String get noteNameLabel => 'Note title';
+
+  @override
+  String get renameTestTitle => 'Rename test';
+
+  @override
+  String get deleteExamTitle => 'Delete exam?';
+
+  @override
+  String get deleteExamMessage =>
+      'This removes the exam and any topics/notes that are not Ready. Ready notes block deletion.';
+
+  @override
+  String get deleteExamEmptyMessage => 'Remove this exam from your list?';
+
+  @override
+  String get deleteTopicTitle => 'Delete topic?';
+
+  @override
+  String get deleteTopicMessage =>
+      'This deletes the topic and any notes that are not Ready. Notes in Ready state cannot be deleted.';
+
+  @override
+  String get deleteNoteTitle => 'Delete note?';
+
+  @override
+  String get deleteNoteMessage => 'This permanently removes the uploaded PDF.';
+
+  @override
+  String get cannotDeleteReadyNote =>
+      'Ready notes cannot be deleted — they power your topics and tests.';
+
+  @override
+  String get cannotDeleteWithReady =>
+      'Cannot delete while a Ready note is present.';
+
+  @override
+  String get actionSuccessDeleted => 'Deleted';
+
+  @override
+  String get actionSuccessRenamed => 'Renamed';
 }

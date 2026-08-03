@@ -4,11 +4,14 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/errors/app_failure.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/create_test_notice.dart';
+import '../../../core/widgets/entity_actions.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../repositories/exams_repository.dart';
 import '../../../repositories/me_repository.dart';
 import '../../../repositories/papers_repository.dart';
 import 'exams_list_screen.dart';
+import '../../papers/presentation/papers_list_screen.dart';
 
 final examDetailProvider =
     FutureProvider.autoDispose.family<ExamItem, String>((ref, examId) {
@@ -110,6 +113,7 @@ class _ExamDetailScreenState extends ConsumerState<ExamDetailScreen> {
   }
 
   Future<void> _createTestFromSelected() async {
+    if (_generating) return;
     final l10n = AppLocalizations.of(context);
     if (_selected.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -117,12 +121,19 @@ class _ExamDetailScreenState extends ConsumerState<ExamDetailScreen> {
       );
       return;
     }
-    final language = await _pickLanguage();
-    if (language == null || !mounted) return;
 
     setState(() => _generating = true);
     try {
-      final paper = await ref.read(papersRepositoryProvider).generatePaperFromTopics(
+      final proceed = await showCreateTestNoticesIfNeeded(
+        context,
+        quota: ref.read(homeSummaryProvider).valueOrNull?.paperQuota,
+      );
+      if (!proceed || !mounted) return;
+
+      final language = await _pickLanguage();
+      if (language == null || !mounted) return;
+
+      await ref.read(papersRepositoryProvider).generatePaperFromTopics(
             examId: widget.examId,
             batchIds: _selected.toList(),
             language: language,
@@ -130,15 +141,140 @@ class _ExamDetailScreenState extends ConsumerState<ExamDetailScreen> {
       ref.invalidate(examBatchesProvider(widget.examId));
       ref.invalidate(examUploadHintProvider(widget.examId));
       ref.invalidate(homeSummaryProvider);
+      ref.invalidate(testTopicFoldersProvider);
       if (!mounted) return;
       setState(() => _selected.clear());
-      context.push('/papers/${paper.id}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.createTestReadyGoToTests)),
+      );
+      context.go('/app/tests');
     } catch (error) {
       if (!mounted) return;
       final message = error is AppFailure ? error.message : l10n.genericError;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
     } finally {
       if (mounted) setState(() => _generating = false);
+    }
+  }
+
+  Future<void> _renameExam(ExamItem exam) async {
+    final l10n = AppLocalizations.of(context);
+    final name = await showRenameDialog(
+      context,
+      title: l10n.renameExamTitle,
+      label: l10n.setupExamFieldLabel,
+      initialValue: exam.name,
+    );
+    if (name == null) return;
+    try {
+      await ref.read(examsRepositoryProvider).renameExam(
+            examId: exam.id,
+            name: name,
+          );
+      ref.invalidate(examDetailProvider(widget.examId));
+      ref.invalidate(examsListProvider);
+      ref.invalidate(homeSummaryProvider);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.actionSuccessRenamed)),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      final message = error is AppFailure ? error.message : l10n.genericError;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    }
+  }
+
+  Future<void> _deleteExam(ExamItem exam) async {
+    final l10n = AppLocalizations.of(context);
+    if (!exam.canDelete) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.cannotDeleteWithReady)),
+      );
+      return;
+    }
+    final confirmed = await showConfirmDeleteDialog(
+      context,
+      title: l10n.deleteExamTitle,
+      message: exam.batchCount == 0
+          ? l10n.deleteExamEmptyMessage
+          : l10n.deleteExamMessage,
+    );
+    if (!confirmed) return;
+    try {
+      await ref.read(examsRepositoryProvider).deleteExam(exam.id);
+      ref.invalidate(examsListProvider);
+      ref.invalidate(homeSummaryProvider);
+      ref.invalidate(testTopicFoldersProvider);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.actionSuccessDeleted)),
+      );
+      context.go('/app/exams');
+    } catch (error) {
+      if (!mounted) return;
+      final message = error is AppFailure ? error.message : l10n.genericError;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    }
+  }
+
+  Future<void> _renameBatch(BatchItem batch) async {
+    final l10n = AppLocalizations.of(context);
+    final name = await showRenameDialog(
+      context,
+      title: l10n.renameTopicTitle,
+      label: l10n.batchNameLabel,
+      initialValue: batch.name,
+    );
+    if (name == null) return;
+    try {
+      await ref.read(examsRepositoryProvider).renameBatch(
+            batchId: batch.id,
+            name: name,
+          );
+      ref.invalidate(examBatchesProvider(widget.examId));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.actionSuccessRenamed)),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      final message = error is AppFailure ? error.message : l10n.genericError;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    }
+  }
+
+  Future<void> _deleteBatch(BatchItem batch) async {
+    final l10n = AppLocalizations.of(context);
+    if (!batch.canDelete) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.cannotDeleteWithReady)),
+      );
+      return;
+    }
+    final confirmed = await showConfirmDeleteDialog(
+      context,
+      title: l10n.deleteTopicTitle,
+      message: l10n.deleteTopicMessage,
+    );
+    if (!confirmed) return;
+    try {
+      await ref.read(examsRepositoryProvider).deleteBatch(batch.id);
+      _selected.remove(batch.id);
+      ref.invalidate(examBatchesProvider(widget.examId));
+      ref.invalidate(examDetailProvider(widget.examId));
+      ref.invalidate(examsListProvider);
+      ref.invalidate(examUploadHintProvider(widget.examId));
+      ref.invalidate(homeSummaryProvider);
+      ref.invalidate(testTopicFoldersProvider);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.actionSuccessDeleted)),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      final message = error is AppFailure ? error.message : l10n.genericError;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
     }
   }
 
@@ -150,6 +286,17 @@ class _ExamDetailScreenState extends ConsumerState<ExamDetailScreen> {
         _selected.add(id);
       }
     });
+  }
+
+  void _toggleTopic(BatchItem batch) {
+    if (batch.noteCount <= 0) {
+      final l10n = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.topicsSelectEmptyTopic)),
+      );
+      return;
+    }
+    _toggle(batch.id);
   }
 
   @override
@@ -170,6 +317,35 @@ class _ExamDetailScreenState extends ConsumerState<ExamDetailScreen> {
           orElse: () => Text(l10n.examDetailTitle, style: _titleStyle),
         ),
         titleTextStyle: _titleStyle,
+        actions: [
+          asyncExam.maybeWhen(
+            data: (exam) => PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'rename') {
+                  _renameExam(exam);
+                } else if (value == 'delete') {
+                  _deleteExam(exam);
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(value: 'rename', child: Text(l10n.rename)),
+                PopupMenuItem(
+                  value: 'delete',
+                  enabled: exam.canDelete,
+                  child: Text(
+                    l10n.delete,
+                    style: TextStyle(
+                      color: exam.canDelete
+                          ? theme.colorScheme.error
+                          : theme.disabledColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            orElse: () => const SizedBox.shrink(),
+          ),
+        ],
       ),
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,
@@ -205,7 +381,7 @@ class _ExamDetailScreenState extends ConsumerState<ExamDetailScreen> {
                       color: Colors.transparent,
                       child: Text(
                         quotaExhausted
-                            ? l10n.paperQuotaExhausted
+                            ? l10n.paperQuotaExhausted(quota.windowDays)
                             : l10n.paperQuotaRemaining(
                                 quota.remaining,
                                 quota.limit,
@@ -245,6 +421,7 @@ class _ExamDetailScreenState extends ConsumerState<ExamDetailScreen> {
             onRefresh: () async {
               ref.invalidate(examBatchesProvider(widget.examId));
               ref.invalidate(examUploadHintProvider(widget.examId));
+              ref.invalidate(examDetailProvider(widget.examId));
               await ref.read(examBatchesProvider(widget.examId).future);
             },
             child: ListView(
@@ -286,7 +463,9 @@ class _ExamDetailScreenState extends ConsumerState<ExamDetailScreen> {
                         child: ListTile(
                           leading: Checkbox(
                             value: selected,
-                            onChanged: (_) => _toggle(batch.id),
+                            onChanged: batch.noteCount <= 0
+                                ? null
+                                : (_) => _toggleTopic(batch),
                           ),
                           title: Text(
                             batch.name,
@@ -296,9 +475,35 @@ class _ExamDetailScreenState extends ConsumerState<ExamDetailScreen> {
                             ),
                           ),
                           subtitle: Text(l10n.batchMeta(batch.noteCount)),
-                          trailing: const Icon(Icons.chevron_right),
+                          trailing: PopupMenuButton<String>(
+                            onSelected: (value) {
+                              if (value == 'rename') {
+                                _renameBatch(batch);
+                              } else if (value == 'delete') {
+                                _deleteBatch(batch);
+                              }
+                            },
+                            itemBuilder: (context) => [
+                              PopupMenuItem(
+                                value: 'rename',
+                                child: Text(l10n.rename),
+                              ),
+                              PopupMenuItem(
+                                value: 'delete',
+                                enabled: batch.canDelete,
+                                child: Text(
+                                  l10n.delete,
+                                  style: TextStyle(
+                                    color: batch.canDelete
+                                        ? theme.colorScheme.error
+                                        : theme.disabledColor,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                           onTap: () => context.push('/batches/${batch.id}'),
-                          onLongPress: () => _toggle(batch.id),
+                          onLongPress: () => _toggleTopic(batch),
                         ),
                       );
                     },

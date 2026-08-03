@@ -6,6 +6,7 @@ import hashlib
 import logging
 import math
 import random
+import re
 import uuid
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
@@ -100,16 +101,36 @@ def _display_titles_for_papers(
     return titles
 
 
-def _canonicalize_user_paper_titles(db: Session, *, user_id: str) -> dict[str, str]:
-    """Rewrite stored titles so old 'Practice — …' papers match the new scheme."""
+def _is_auto_or_legacy_paper_title(title: str | None) -> bool:
+    """True for system-generated / migratable titles — never overwrite user renames."""
+    cleaned = (title or "").strip()
+    if not cleaned:
+        return True
+    if cleaned.startswith("Practice —") or cleaned.startswith("Practice -"):
+        return True
+    if re.fullmatch(r"Test-\d+", cleaned):
+        return True
+    if re.fullmatch(r"MultiTopic-Test-\d+", cleaned):
+        return True
+    return False
+
+
+def _canonicalize_user_paper_titles(db: Session, *, user_id: str) -> None:
+    """
+    Migrate legacy / auto titles to Test-N scheme.
+
+    Custom titles (user rename) are left untouched.
+    """
     papers = list(
         db.scalars(select(QuestionPaper).where(QuestionPaper.user_id == user_id)).all()
     )
     if not papers:
-        return {}
+        return
     titles = _display_titles_for_papers(db, papers=papers)
     changed = False
     for paper in papers:
+        if not _is_auto_or_legacy_paper_title(paper.title):
+            continue
         new_title = titles.get(paper.id)
         if new_title and paper.title != new_title:
             paper.title = new_title
@@ -119,7 +140,6 @@ def _canonicalize_user_paper_titles(db: Session, *, user_id: str) -> dict[str, s
         db.commit()
         for paper in papers:
             db.refresh(paper)
-    return titles
 
 
 def list_test_topic_folders(db: Session, *, user_id: str) -> list[dict]:
@@ -129,7 +149,7 @@ def list_test_topic_folders(db: Session, *, user_id: str) -> list[dict]:
     Papers inside each folder ordered newest first.
     Multi-topic papers appear under every linked topic.
     """
-    titles = _canonicalize_user_paper_titles(db, user_id=user_id)
+    _canonicalize_user_paper_titles(db, user_id=user_id)
 
     papers = list(
         db.scalars(
@@ -177,7 +197,7 @@ def list_test_topic_folders(db: Session, *, user_id: str) -> list[dict]:
                         "id": p.id,
                         "note_id": p.note_id,
                         "batch_folder_id": p.batch_folder_id,
-                        "title": titles.get(p.id) or p.title,
+                        "title": p.title,
                         "language": p.language,
                         "status": p.status,
                         "question_count": p.question_count,
@@ -197,9 +217,16 @@ def list_test_topic_folders(db: Session, *, user_id: str) -> list[dict]:
     return folders
 
 
-def _month_paper_count(db: Session, *, user_id: str) -> int:
-    now = datetime.now(timezone.utc)
-    start = datetime(now.year, now.month, 1, tzinfo=timezone.utc)
+def _quota_window_start(now: datetime | None = None) -> datetime:
+    current = now or datetime.now(timezone.utc)
+    if current.tzinfo is None:
+        current = current.replace(tzinfo=timezone.utc)
+    return current - timedelta(days=int(settings.PAPER_CREATE_WINDOW_DAYS))
+
+
+def _rolling_paper_count(db: Session, *, user_id: str, now: datetime | None = None) -> int:
+    """Ready papers created within the rolling window (each occupies one create slot)."""
+    start = _quota_window_start(now)
     stmt = (
         select(func.count())
         .select_from(QuestionPaper)
@@ -212,27 +239,58 @@ def _month_paper_count(db: Session, *, user_id: str) -> int:
     return int(db.scalar(stmt) or 0)
 
 
-def _quota_resets_at(now: datetime | None = None) -> datetime:
-    """First instant of next calendar month (UTC) — when the create counter resets."""
+def _oldest_active_paper_created_at(
+    db: Session, *, user_id: str, now: datetime | None = None
+) -> datetime | None:
+    """Oldest ready paper still inside the rolling window — drives next slot restore."""
+    start = _quota_window_start(now)
+    stmt = (
+        select(QuestionPaper.created_at)
+        .where(
+            QuestionPaper.user_id == user_id,
+            QuestionPaper.created_at >= start,
+            QuestionPaper.status == PaperStatus.READY.value,
+        )
+        .order_by(QuestionPaper.created_at.asc())
+        .limit(1)
+    )
+    return db.scalar(stmt)
+
+
+def _next_slot_at(
+    db: Session, *, user_id: str, now: datetime | None = None
+) -> datetime:
+    """
+    When the next create slot frees.
+
+    Each paper restores its slot PAPER_CREATE_WINDOW_DAYS after that paper was created
+    (not after the last available attempt was used).
+    """
     current = now or datetime.now(timezone.utc)
     if current.tzinfo is None:
         current = current.replace(tzinfo=timezone.utc)
-    if current.month == 12:
-        return datetime(current.year + 1, 1, 1, tzinfo=timezone.utc)
-    return datetime(current.year, current.month + 1, 1, tzinfo=timezone.utc)
+    oldest = _oldest_active_paper_created_at(db, user_id=user_id, now=current)
+    if oldest is None:
+        return current
+    created = oldest
+    if created.tzinfo is None:
+        created = created.replace(tzinfo=timezone.utc)
+    return created + timedelta(days=int(settings.PAPER_CREATE_WINDOW_DAYS))
 
 
 def paper_quota_for_user(db: Session, *, user: User) -> dict:
-    """Monthly create quota snapshot for home / create-test UI."""
+    """Rolling create-quota snapshot for home / create-test UI."""
     limits = limits_for(user.account_type)
     limit = int(limits.paper_monthly_create_limit)
-    used = _month_paper_count(db, user_id=user.id)
+    used = _rolling_paper_count(db, user_id=user.id)
     remaining = max(0, limit - used)
     return {
         "used": used,
         "limit": limit,
         "remaining": remaining,
-        "resets_at": _quota_resets_at(),
+        # Kept as resets_at for API compat — means "next create slot frees at".
+        "resets_at": _next_slot_at(db, user_id=user.id),
+        "window_days": int(settings.PAPER_CREATE_WINDOW_DAYS),
     }
 
 
@@ -242,13 +300,15 @@ def _enforce_quota(
     user_id: str,
     monthly_limit: int,
 ) -> None:
-    used = _month_paper_count(db, user_id=user_id)
+    used = _rolling_paper_count(db, user_id=user_id)
     if used >= monthly_limit:
+        next_at = _next_slot_at(db, user_id=user_id)
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail=(
-                f"Monthly paper create limit reached "
-                f"({monthly_limit}). Try again next month."
+                f"Paper create limit reached ({monthly_limit} per "
+                f"{int(settings.PAPER_CREATE_WINDOW_DAYS)} days). "
+                f"A slot frees after {next_at.isoformat()}."
             ),
         )
 

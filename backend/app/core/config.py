@@ -67,10 +67,13 @@ class Settings(BaseSettings):
     OCR_MAX_PAGES_TESTER: int = 500
 
     # Phase 4 — paper generation. USER = student product; TESTER slightly higher for QA.
+    # Concurrent create slots (USER=4). Each create occupies a slot for PAPER_CREATE_WINDOW_DAYS
+    # from that paper's created_at (rolling restore — not calendar-month reset).
     PAPER_MONTHLY_CREATE_LIMIT: int = 4
-    PAPER_MONTHLY_CREATE_LIMIT_ADMIN: int = 10000
+    PAPER_MONTHLY_CREATE_LIMIT_ADMIN: int = 100
     PAPER_MONTHLY_CREATE_LIMIT_DEV: int = 100
     PAPER_MONTHLY_CREATE_LIMIT_TESTER: int = 20
+    PAPER_CREATE_WINDOW_DAYS: int = 30
     # Retained for account-tier tooling / future use — not enforced on upload or create.
     PAPER_MAX_PAGES: int = 500
     PAPER_MAX_PAGES_ADMIN: int = 1000

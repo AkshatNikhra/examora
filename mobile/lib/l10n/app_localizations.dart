@@ -706,23 +706,197 @@ abstract class AppLocalizations {
   /// **'Select at least one topic'**
   String get topicsSelectNone;
 
-  /// Remaining monthly paper creates under create CTA
+  /// Snack when selecting a topic with zero notes
   ///
   /// In en, this message translates to:
-  /// **'{remaining} of {limit} tests left this month'**
+  /// **'Upload notes to a topic before selecting it for a test'**
+  String get topicsSelectEmptyTopic;
+
+  /// Title for create-test time notice dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Creating your test'**
+  String get createTestNoticeTitle;
+
+  /// Body for create-test time notice dialog
+  ///
+  /// In en, this message translates to:
+  /// **'MCQ creation might take time. Check in the Tests tab after some time.'**
+  String get createTestNoticeBody;
+
+  /// Checkbox to suppress create-test time notice
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t show again'**
+  String get createTestNoticeDontShowAgain;
+
+  /// Close button on create-test time notice
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get createTestNoticeClose;
+
+  /// Title for create-test quota notice dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Test create limit'**
+  String get createTestQuotaNoticeTitle;
+
+  /// Body explaining quota before create-test
+  ///
+  /// In en, this message translates to:
+  /// **'{limit} creates allowed. After this, {remainingAfter} would be left. If it goes to zero, a slot restores in {days} days.'**
+  String createTestQuotaNoticeBody(int limit, int remainingAfter, int days);
+
+  /// Snack after create succeeds; user opens test from Tests tab
+  ///
+  /// In en, this message translates to:
+  /// **'Test ready. Open it from the Tests tab to attempt.'**
+  String get createTestReadyGoToTests;
+
+  /// Remaining rolling paper creates under create CTA
+  ///
+  /// In en, this message translates to:
+  /// **'{remaining} of {limit} tests left'**
   String paperQuotaRemaining(int remaining, int limit);
 
-  /// Shown when monthly create quota is used up
+  /// Shown when rolling create quota is used up
   ///
   /// In en, this message translates to:
-  /// **'No tests left this month. Resets next month.'**
-  String get paperQuotaExhausted;
+  /// **'No tests left. A slot frees {days} days after each create.'**
+  String paperQuotaExhausted(int days);
+
+  /// Explains rolling 30-day restore for paper creates
+  ///
+  /// In en, this message translates to:
+  /// **'You can create up to {limit} practice tests. Each create uses 1 slot for {days} days from when that test is created — then the slot restores. You never have more than {limit} active creates at once.'**
+  String paperQuotaInfo(int limit, int days);
 
   /// Home stats card label for remaining creates
   ///
   /// In en, this message translates to:
   /// **'Tests Left'**
   String get homeStatTestsLeft;
+
+  /// Rename action in overflow menu
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get rename;
+
+  /// Confirm rename dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get renameConfirm;
+
+  /// Delete action in overflow menu
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// Confirm delete button
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get deleteConfirm;
+
+  /// Dialog title for renaming exam
+  ///
+  /// In en, this message translates to:
+  /// **'Rename exam'**
+  String get renameExamTitle;
+
+  /// Dialog title for renaming topic
+  ///
+  /// In en, this message translates to:
+  /// **'Rename topic'**
+  String get renameTopicTitle;
+
+  /// Dialog title for renaming note
+  ///
+  /// In en, this message translates to:
+  /// **'Rename note'**
+  String get renameNoteTitle;
+
+  /// Field label when renaming a note
+  ///
+  /// In en, this message translates to:
+  /// **'Note title'**
+  String get noteNameLabel;
+
+  /// Dialog title for renaming practice test
+  ///
+  /// In en, this message translates to:
+  /// **'Rename test'**
+  String get renameTestTitle;
+
+  /// Confirm delete exam title
+  ///
+  /// In en, this message translates to:
+  /// **'Delete exam?'**
+  String get deleteExamTitle;
+
+  /// Confirm delete exam body
+  ///
+  /// In en, this message translates to:
+  /// **'This removes the exam and any topics/notes that are not Ready. Ready notes block deletion.'**
+  String get deleteExamMessage;
+
+  /// Confirm delete empty exam
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this exam from your list?'**
+  String get deleteExamEmptyMessage;
+
+  /// Confirm delete topic title
+  ///
+  /// In en, this message translates to:
+  /// **'Delete topic?'**
+  String get deleteTopicTitle;
+
+  /// Confirm delete topic body
+  ///
+  /// In en, this message translates to:
+  /// **'This deletes the topic and any notes that are not Ready. Notes in Ready state cannot be deleted.'**
+  String get deleteTopicMessage;
+
+  /// Confirm delete note title
+  ///
+  /// In en, this message translates to:
+  /// **'Delete note?'**
+  String get deleteNoteTitle;
+
+  /// Confirm delete note body
+  ///
+  /// In en, this message translates to:
+  /// **'This permanently removes the uploaded PDF.'**
+  String get deleteNoteMessage;
+
+  /// Shown when user tries to delete a Ready note
+  ///
+  /// In en, this message translates to:
+  /// **'Ready notes cannot be deleted — they power your topics and tests.'**
+  String get cannotDeleteReadyNote;
+
+  /// Shown when exam/topic delete is blocked
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot delete while a Ready note is present.'**
+  String get cannotDeleteWithReady;
+
+  /// Snack after successful delete
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted'**
+  String get actionSuccessDeleted;
+
+  /// Snack after successful rename
+  ///
+  /// In en, this message translates to:
+  /// **'Renamed'**
+  String get actionSuccessRenamed;
 }
 
 class _AppLocalizationsDelegate

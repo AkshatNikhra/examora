@@ -25,7 +25,7 @@ def test_limits_for_uses_tier_env_values(monkeypatch: pytest.MonkeyPatch) -> Non
     monkeypatch.setattr("app.core.limits.settings.PAPER_MAX_PAGES_TESTER", 50)
     monkeypatch.setattr("app.core.limits.settings.PAPER_MONTHLY_CREATE_LIMIT", 4)
     monkeypatch.setattr(
-        "app.core.limits.settings.PAPER_MONTHLY_CREATE_LIMIT_ADMIN", 10000
+        "app.core.limits.settings.PAPER_MONTHLY_CREATE_LIMIT_ADMIN", 100
     )
     monkeypatch.setattr(
         "app.core.limits.settings.PAPER_MONTHLY_CREATE_LIMIT_DEV", 100
@@ -38,7 +38,7 @@ def test_limits_for_uses_tier_env_values(monkeypatch: pytest.MonkeyPatch) -> Non
     assert limits_for(AccountType.ADMIN).ocr_max_pages == 1000
     assert limits_for("DEV").note_ai_max_chunks == 50
     assert limits_for("TESTER").paper_max_pages == 50
-    assert limits_for("ADMIN").paper_monthly_create_limit == 10000
+    assert limits_for("ADMIN").paper_monthly_create_limit == 100
     assert limits_for("weird").ocr_max_pages == 20  # unknown → USER
 
 

@@ -126,12 +126,14 @@ class PaperQuota {
     required this.limit,
     required this.remaining,
     required this.resetsAt,
+    this.windowDays = 30,
   });
 
   final int used;
   final int limit;
   final int remaining;
   final DateTime resetsAt;
+  final int windowDays;
 
   bool get isExhausted => remaining <= 0;
 
@@ -141,6 +143,7 @@ class PaperQuota {
       limit: json['limit'] as int? ?? 0,
       remaining: json['remaining'] as int? ?? 0,
       resetsAt: DateTime.parse(json['resets_at'] as String),
+      windowDays: json['window_days'] as int? ?? 30,
     );
   }
 }

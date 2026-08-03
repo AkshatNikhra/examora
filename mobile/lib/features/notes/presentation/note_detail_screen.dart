@@ -5,10 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/errors/app_failure.dart';
+import '../../../core/widgets/create_test_notice.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../repositories/me_repository.dart';
 import '../../../repositories/notes_repository.dart';
 import '../../../repositories/papers_repository.dart';
+import '../../papers/presentation/papers_list_screen.dart';
 import 'notes_list_screen.dart';
 
 final noteDetailProvider =
@@ -71,19 +73,31 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
   }
 
   Future<void> _createPaper() async {
+    if (_generating) return;
     final l10n = AppLocalizations.of(context);
-    final language = await _pickLanguage();
-    if (language == null || !mounted) return;
 
     setState(() => _generating = true);
     try {
-      final paper = await ref.read(papersRepositoryProvider).generatePaper(
+      final proceed = await showCreateTestNoticesIfNeeded(
+        context,
+        quota: ref.read(homeSummaryProvider).valueOrNull?.paperQuota,
+      );
+      if (!proceed || !mounted) return;
+
+      final language = await _pickLanguage();
+      if (language == null || !mounted) return;
+
+      await ref.read(papersRepositoryProvider).generatePaper(
             noteId: widget.noteId,
             language: language,
           );
       ref.invalidate(homeSummaryProvider);
+      ref.invalidate(testTopicFoldersProvider);
       if (!mounted) return;
-      context.push('/papers/${paper.id}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.createTestReadyGoToTests)),
+      );
+      context.go('/app/tests');
     } catch (error) {
       if (!mounted) return;
       final message = error is AppFailure ? error.message : l10n.genericError;
@@ -196,7 +210,7 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
                     const SizedBox(height: 8),
                     Text(
                       quotaExhausted
-                          ? l10n.paperQuotaExhausted
+                          ? l10n.paperQuotaExhausted(quota.windowDays)
                           : l10n.paperQuotaRemaining(
                               quota.remaining,
                               quota.limit,

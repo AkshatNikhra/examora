@@ -48,9 +48,12 @@ def test_upload_and_list_notes(client: TestClient, monkeypatch: pytest.MonkeyPat
         headers={"Authorization": "Bearer test-token"},
     )
     assert detail.status_code == 200
-    assert detail.json()["id"] == note_id
-    assert "raw_extracted_text" in detail.json()
-    assert "canonical_content_en" in detail.json()
+    body = detail.json()
+    assert body["id"] == note_id
+    # Detail is metadata-only — OCR / AI text is not exposed on GET /notes/{id}.
+    assert "raw_extracted_text" not in body
+    assert "canonical_content_en" not in body
+    assert body["can_delete"] is True
 
     status = client.get(
         f"/notes/{note_id}/status",
@@ -116,8 +119,12 @@ def test_process_note_local_pipeline(
         headers={"Authorization": "Bearer test-token"},
     )
     assert detail.status_code == 200
-    assert "Article 14" in (detail.json()["raw_extracted_text"] or "")
-    assert "Article 14" in (detail.json()["canonical_content_en"] or "")
+    detail_body = detail.json()
+    assert detail_body["status"] == "ready"
+    assert detail_body["has_canonical"] is True
+    assert detail_body["can_delete"] is False
+    assert "raw_extracted_text" not in detail_body
+    assert "canonical_content_en" not in detail_body
 
 
 def test_process_note_marks_failed_on_empty_pdf(
@@ -219,6 +226,17 @@ def test_process_note_uses_ocr_when_extract_empty(
     )
     assert processed.status_code == 200
 
+    status = client.get(
+        f"/notes/{note_id}/status",
+        headers={"Authorization": "Bearer test-token"},
+    )
+    assert status.status_code == 200
+    status_body = status.json()
+    assert status_body["status"] == "ready"
+    assert status_body["has_canonical"] is True
+    assert "Article 14" in (status_body["canonical_preview"] or "")
+    assert status_body.get("raw_preview")
+
     detail = client.get(
         f"/notes/{note_id}",
         headers={"Authorization": "Bearer test-token"},
@@ -226,5 +244,7 @@ def test_process_note_uses_ocr_when_extract_empty(
     assert detail.status_code == 200
     body = detail.json()
     assert body["status"] == "ready"
-    assert "Article 14" in (body["raw_extracted_text"] or "")
     assert body["has_canonical"] is True
+    assert body["can_delete"] is False
+    assert "raw_extracted_text" not in body
+    assert "canonical_content_en" not in body
