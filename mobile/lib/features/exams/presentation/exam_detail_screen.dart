@@ -6,6 +6,7 @@ import '../../../core/errors/app_failure.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../repositories/exams_repository.dart';
+import '../../../repositories/me_repository.dart';
 import '../../../repositories/papers_repository.dart';
 import 'exams_list_screen.dart';
 
@@ -128,6 +129,7 @@ class _ExamDetailScreenState extends ConsumerState<ExamDetailScreen> {
           );
       ref.invalidate(examBatchesProvider(widget.examId));
       ref.invalidate(examUploadHintProvider(widget.examId));
+      ref.invalidate(homeSummaryProvider);
       if (!mounted) return;
       setState(() => _selected.clear());
       context.push('/papers/${paper.id}');
@@ -156,6 +158,8 @@ class _ExamDetailScreenState extends ConsumerState<ExamDetailScreen> {
     final theme = Theme.of(context);
     final asyncExam = ref.watch(examDetailProvider(widget.examId));
     final asyncBatches = ref.watch(examBatchesProvider(widget.examId));
+    final quota = ref.watch(homeSummaryProvider).valueOrNull?.paperQuota;
+    final quotaExhausted = quota?.isExhausted ?? false;
     final selectedCount = _selected.length;
 
     return Scaffold(
@@ -174,21 +178,47 @@ class _ExamDetailScreenState extends ConsumerState<ExamDetailScreen> {
           if (selectedCount > 0)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: FloatingActionButton.extended(
-                heroTag: 'create_test',
-                onPressed: _generating ? null : _createTestFromSelected,
-                icon: _generating
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.ballot_outlined),
-                label: Text(
-                  _generating
-                      ? l10n.paperGenerating
-                      : l10n.topicsCreateTestSelected(selectedCount),
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  FloatingActionButton.extended(
+                    heroTag: 'create_test',
+                    onPressed: _generating || quotaExhausted
+                        ? null
+                        : _createTestFromSelected,
+                    icon: _generating
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.ballot_outlined),
+                    label: Text(
+                      _generating
+                          ? l10n.paperGenerating
+                          : l10n.topicsCreateTestSelected(selectedCount),
+                    ),
+                  ),
+                  if (quota != null) ...[
+                    const SizedBox(height: 6),
+                    Material(
+                      color: Colors.transparent,
+                      child: Text(
+                        quotaExhausted
+                            ? l10n.paperQuotaExhausted
+                            : l10n.paperQuotaRemaining(
+                                quota.remaining,
+                                quota.limit,
+                              ),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: quotaExhausted
+                              ? theme.colorScheme.error
+                              : theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
           FloatingActionButton.extended(

@@ -10,6 +10,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../features/notes/presentation/open_note_pdf.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../repositories/exams_repository.dart';
+import '../../../repositories/me_repository.dart';
 import '../../../repositories/notes_repository.dart';
 import '../../../repositories/papers_repository.dart';
 import 'exam_detail_screen.dart';
@@ -149,6 +150,7 @@ class _BatchDetailScreenState extends ConsumerState<BatchDetailScreen> {
             language: language,
           );
       ref.invalidate(batchDetailProvider(widget.batchId));
+      ref.invalidate(homeSummaryProvider);
       final examId = ref.read(batchDetailProvider(widget.batchId)).valueOrNull?.examId;
       if (examId != null) {
         ref.invalidate(examBatchesProvider(examId));
@@ -180,6 +182,8 @@ class _BatchDetailScreenState extends ConsumerState<BatchDetailScreen> {
     final theme = Theme.of(context);
     final asyncBatch = ref.watch(batchDetailProvider(widget.batchId));
     final asyncNotes = ref.watch(batchNotesProvider(widget.batchId));
+    final quota = ref.watch(homeSummaryProvider).valueOrNull?.paperQuota;
+    final quotaExhausted = quota?.isExhausted ?? false;
     _syncPolling(asyncNotes.valueOrNull);
 
     return Scaffold(
@@ -244,7 +248,9 @@ class _BatchDetailScreenState extends ConsumerState<BatchDetailScreen> {
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
                     children: [
                       FilledButton.icon(
-                        onPressed: _generating || notes.isEmpty
+                        onPressed: _generating ||
+                                notes.isEmpty ||
+                                quotaExhausted
                             ? null
                             : _createTest,
                         icon: _generating
@@ -263,6 +269,22 @@ class _BatchDetailScreenState extends ConsumerState<BatchDetailScreen> {
                               : l10n.batchCreateTestCta,
                         ),
                       ),
+                      if (quota != null) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          quotaExhausted
+                              ? l10n.paperQuotaExhausted
+                              : l10n.paperQuotaRemaining(
+                                  quota.remaining,
+                                  quota.limit,
+                                ),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: quotaExhausted
+                                ? theme.colorScheme.error
+                                : theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 16),
                       Text(
                         l10n.batchNotesTitle,

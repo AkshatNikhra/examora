@@ -705,6 +705,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select at least one topic'**
   String get topicsSelectNone;
+
+  /// Remaining monthly paper creates under create CTA
+  ///
+  /// In en, this message translates to:
+  /// **'{remaining} of {limit} tests left this month'**
+  String paperQuotaRemaining(int remaining, int limit);
+
+  /// Shown when monthly create quota is used up
+  ///
+  /// In en, this message translates to:
+  /// **'No tests left this month. Resets next month.'**
+  String get paperQuotaExhausted;
+
+  /// Home stats card label for remaining creates
+  ///
+  /// In en, this message translates to:
+  /// **'Tests Left'**
+  String get homeStatTestsLeft;
 }
 
 class _AppLocalizationsDelegate

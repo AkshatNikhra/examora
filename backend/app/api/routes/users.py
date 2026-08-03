@@ -15,12 +15,14 @@ from app.schemas import (
     HomeSummaryResponse,
     OnboardingExamsRequest,
     OnboardingProfileRequest,
+    PaperQuotaResponse,
     PhoneAccountStatusResponse,
     UserPreferenceUpdate,
     UserResponse,
 )
 from app.services import catalog as catalog_service
 from app.services import exams as exams_service
+from app.services import papers as papers_service
 
 router = APIRouter(tags=["users"])
 
@@ -208,6 +210,8 @@ def home_summary(
     activity.sort(key=lambda x: x.at, reverse=True)
     activity = activity[:3]
 
+    quota = papers_service.paper_quota_for_user(db, user=current_user)
+
     return HomeSummaryResponse(
         full_name=current_user.full_name,
         exams_count=len(exams),
@@ -215,4 +219,5 @@ def home_summary(
         avg_score_percent=avg,
         exams=exam_responses,
         recent_activity=activity,
+        paper_quota=PaperQuotaResponse(**quota),
     )

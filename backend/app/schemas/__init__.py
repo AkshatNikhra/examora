@@ -256,6 +256,15 @@ class HomeActivityItem(BaseModel):
     at: datetime
 
 
+class PaperQuotaResponse(BaseModel):
+    """Monthly practice-paper create quota for the current account."""
+
+    used: int
+    limit: int
+    remaining: int
+    resets_at: datetime
+
+
 class HomeSummaryResponse(BaseModel):
     full_name: str | None = None
     exams_count: int = 0
@@ -263,3 +272,4 @@ class HomeSummaryResponse(BaseModel):
     avg_score_percent: int | None = None
     exams: list[ExamResponse] = Field(default_factory=list)
     recent_activity: list[HomeActivityItem] = Field(default_factory=list)
+    paper_quota: PaperQuotaResponse | None = None

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/errors/app_failure.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../repositories/me_repository.dart';
 import '../../../repositories/notes_repository.dart';
 import '../../../repositories/papers_repository.dart';
 import 'notes_list_screen.dart';
@@ -80,6 +81,7 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
             noteId: widget.noteId,
             language: language,
           );
+      ref.invalidate(homeSummaryProvider);
       if (!mounted) return;
       context.push('/papers/${paper.id}');
     } catch (error) {
@@ -96,6 +98,8 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final asyncNote = ref.watch(noteDetailProvider(widget.noteId));
+    final quota = ref.watch(homeSummaryProvider).valueOrNull?.paperQuota;
+    final quotaExhausted = quota?.isExhausted ?? false;
 
     ref.listen(noteDetailProvider(widget.noteId), (_, next) {
       next.whenData(_syncPolling);
@@ -119,6 +123,7 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
           return RefreshIndicator(
             onRefresh: () async {
               ref.invalidate(noteDetailProvider(widget.noteId));
+              ref.invalidate(homeSummaryProvider);
               await ref.read(noteDetailProvider(widget.noteId).future);
             },
             child: ListView(
@@ -171,7 +176,8 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: FilledButton.icon(
-                      onPressed: _generating ? null : _createPaper,
+                      onPressed:
+                          _generating || quotaExhausted ? null : _createPaper,
                       icon: _generating
                           ? const SizedBox(
                               width: 16,
@@ -186,6 +192,22 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
                       ),
                     ),
                   ),
+                  if (quota != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      quotaExhausted
+                          ? l10n.paperQuotaExhausted
+                          : l10n.paperQuotaRemaining(
+                              quota.remaining,
+                              quota.limit,
+                            ),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: quotaExhausted
+                            ? theme.colorScheme.error
+                            : theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ],
                 const SizedBox(height: 20),
                 _TextSection(

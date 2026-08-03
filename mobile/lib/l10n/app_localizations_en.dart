@@ -348,4 +348,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get topicsSelectNone => 'Select at least one topic';
+
+  @override
+  String paperQuotaRemaining(int remaining, int limit) {
+    return '$remaining of $limit tests left this month';
+  }
+
+  @override
+  String get paperQuotaExhausted =>
+      'No tests left this month. Resets next month.';
+
+  @override
+  String get homeStatTestsLeft => 'Tests Left';
 }

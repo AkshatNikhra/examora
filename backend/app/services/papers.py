@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import math
+import random
 import uuid
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
@@ -211,6 +212,30 @@ def _month_paper_count(db: Session, *, user_id: str) -> int:
     return int(db.scalar(stmt) or 0)
 
 
+def _quota_resets_at(now: datetime | None = None) -> datetime:
+    """First instant of next calendar month (UTC) — when the create counter resets."""
+    current = now or datetime.now(timezone.utc)
+    if current.tzinfo is None:
+        current = current.replace(tzinfo=timezone.utc)
+    if current.month == 12:
+        return datetime(current.year + 1, 1, 1, tzinfo=timezone.utc)
+    return datetime(current.year, current.month + 1, 1, tzinfo=timezone.utc)
+
+
+def paper_quota_for_user(db: Session, *, user: User) -> dict:
+    """Monthly create quota snapshot for home / create-test UI."""
+    limits = limits_for(user.account_type)
+    limit = int(limits.paper_monthly_create_limit)
+    used = _month_paper_count(db, user_id=user.id)
+    remaining = max(0, limit - used)
+    return {
+        "used": used,
+        "limit": limit,
+        "remaining": remaining,
+        "resets_at": _quota_resets_at(),
+    }
+
+
 def _enforce_quota(
     db: Session,
     *,
@@ -239,23 +264,28 @@ def _resolve_language(user: User, language: str | None) -> str:
 
 
 
-def _is_on_cooldown(question: Question, recent_paper_ids: set[str], db: Session) -> bool:
-    now = datetime.now(timezone.utc)
-    if question.last_asked_at is not None:
-        asked = question.last_asked_at
-        if asked.tzinfo is None:
-            asked = asked.replace(tzinfo=timezone.utc)
-        if now - asked < timedelta(days=settings.PAPER_COOLDOWN_DAYS):
-            return True
+def _is_recently_used(
+    question: Question,
+    *,
+    recent_question_ids: set[str],
+    now: datetime,
+) -> bool:
+    """
+    Soft cooldown signal (not a hard ban).
 
-    if not recent_paper_ids:
+    True if the question appeared on one of the last PAPER_COOLDOWN_GENERATIONS
+    papers, or was asked within PAPER_COOLDOWN_DAYS. Selection prefers questions
+    where this is False, but will reuse cooled questions when the fresh pool is
+    too small to fill the paper.
+    """
+    if question.id in recent_question_ids:
+        return True
+    if question.last_asked_at is None:
         return False
-
-    stmt = select(PaperQuestion.paper_id).where(
-        PaperQuestion.question_id == question.id,
-        PaperQuestion.paper_id.in_(recent_paper_ids),
-    )
-    return db.scalars(stmt).first() is not None
+    asked = question.last_asked_at
+    if asked.tzinfo is None:
+        asked = asked.replace(tzinfo=timezone.utc)
+    return now - asked < timedelta(days=settings.PAPER_COOLDOWN_DAYS)
 
 
 def _recent_paper_ids(db: Session, *, user_id: str) -> set[str]:
@@ -271,7 +301,22 @@ def _recent_paper_ids(db: Session, *, user_id: str) -> set[str]:
     return set(db.scalars(stmt).all())
 
 
+def _question_ids_on_papers(db: Session, *, paper_ids: set[str]) -> set[str]:
+    if not paper_ids:
+        return set()
+    stmt = select(PaperQuestion.question_id).where(
+        PaperQuestion.paper_id.in_(paper_ids)
+    )
+    return set(db.scalars(stmt).all())
+
+
 def _target_paper_size(unique_available: int) -> int:
+    """
+    Paper length = max(MIN, floor(available * RATIO)), then capped by MAX and pool size.
+
+    Primary rule is the 30% ratio (plus a minimum of 5). PAPER_MAX_QUESTIONS is only a
+    safety ceiling so huge pools cannot produce endless papers.
+    """
     if unique_available <= 0:
         return 0
     sized = max(
@@ -281,44 +326,104 @@ def _target_paper_size(unique_available: int) -> int:
     return max(1, min(sized, settings.PAPER_MAX_QUESTIONS, unique_available))
 
 
+def _fairness_sort_key(question: Question, noise: float) -> tuple:
+    asked = question.last_asked_at
+    if asked is None:
+        asked_key = datetime.min.replace(tzinfo=timezone.utc)
+    else:
+        asked_key = asked if asked.tzinfo else asked.replace(tzinfo=timezone.utc)
+    return (int(question.ask_count or 0), asked_key, noise)
+
+
+def _one_pick_per_variant_group(candidates: list[Question]) -> list[Question]:
+    by_group: dict[str, list[Question]] = defaultdict(list)
+    for q in candidates:
+        by_group[q.variant_group_id].append(q)
+
+    picks: list[Question] = []
+    for group_questions in by_group.values():
+        group_questions.sort(
+            key=lambda q: (
+                int(q.ask_count or 0),
+                q.last_asked_at or datetime.min.replace(tzinfo=timezone.utc),
+            )
+        )
+        picks.append(group_questions[0])
+    return picks
+
+
+def _topic_round_robin(questions: list[Question]) -> list[Question]:
+    """
+    Drain least-asked lists per topic in round-robin so multi-topic papers
+    are not dominated by one large topic. Topic order itself is shuffled.
+    """
+    if not questions:
+        return []
+
+    by_topic: dict[str, list[Question]] = defaultdict(list)
+    for q in questions:
+        by_topic[(q.topic or "").strip() or "General"].append(q)
+
+    for topic_questions in by_topic.values():
+        noises = {id(q): random.random() for q in topic_questions}
+        topic_questions.sort(key=lambda q: _fairness_sort_key(q, noises[id(q)]))
+
+    topics = list(by_topic.keys())
+    random.shuffle(topics)
+
+    ordered: list[Question] = []
+    while any(by_topic[t] for t in topics):
+        for topic in topics:
+            if by_topic[topic]:
+                ordered.append(by_topic[topic].pop(0))
+    return ordered
+
+
 def _select_questions_for_paper(
     db: Session,
     *,
     candidates: list[Question],
     user_id: str,
 ) -> list[Question]:
+    """
+    Fair coverage selection for single- and multi-topic papers:
+
+    1. One wording per variant_group (concept)
+    2. Prefer not-recently-used (soft cooldown) when the fresh pool is large enough
+    3. Otherwise fall back to least-asked cooled questions so creates never starve
+    4. Among the chosen priority tier, take least-asked first (topic round-robin)
+    5. Shuffle only the final N for student-facing order
+    """
+    picks = _one_pick_per_variant_group(candidates)
+    if not picks:
+        return []
+
+    target = _target_paper_size(len(picks))
+    if target <= 0:
+        return []
+
     recent_ids = _recent_paper_ids(db, user_id=user_id)
-    by_group: dict[str, list[Question]] = defaultdict(list)
-    for q in candidates:
-        if _is_on_cooldown(q, recent_ids, db):
-            continue
-        by_group[q.variant_group_id].append(q)
+    recent_question_ids = _question_ids_on_papers(db, paper_ids=recent_ids)
+    now = datetime.now(timezone.utc)
 
-    # One pick per variant group; prefer never-asked, then older last_asked
-    picks: list[Question] = []
-    for group_questions in by_group.values():
-        group_questions.sort(
-            key=lambda q: (
-                q.ask_count,
-                q.last_asked_at or datetime.min.replace(tzinfo=timezone.utc),
-            )
-        )
-        picks.append(group_questions[0])
-
-    # Topic spread: round-robin by topic
-    by_topic: dict[str, list[Question]] = defaultdict(list)
+    fresh: list[Question] = []
+    cooled: list[Question] = []
     for q in picks:
-        by_topic[q.topic or "General"].append(q)
+        if _is_recently_used(
+            q, recent_question_ids=recent_question_ids, now=now
+        ):
+            cooled.append(q)
+        else:
+            fresh.append(q)
 
-    ordered: list[Question] = []
-    topics = sorted(by_topic.keys())
-    while any(by_topic[t] for t in topics):
-        for topic in topics:
-            if by_topic[topic]:
-                ordered.append(by_topic[topic].pop(0))
+    # Soft cooldown: use fresh first; only dip into cooled if needed to fill target.
+    ordered = _topic_round_robin(fresh)
+    if len(ordered) < target:
+        ordered.extend(_topic_round_robin(cooled))
 
-    target = _target_paper_size(len(ordered))
-    return ordered[:target]
+    selected = ordered[:target]
+    random.shuffle(selected)
+    return selected
 
 
 def generate_paper_for_note(
@@ -428,7 +533,7 @@ def generate_paper_for_note(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=(
-                "No eligible questions after cooldown/filters. "
+                "No eligible questions available for a new test. "
                 "Try again later or process richer notes."
             ),
         )
@@ -664,7 +769,7 @@ def generate_paper_for_batches(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=(
-                "No eligible questions after cooldown/filters. "
+                "No eligible questions available for a new test. "
                 "Try again later or add richer notes."
             ),
         )

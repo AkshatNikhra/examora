@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     NOTE_IMAGE_MAX_HEIGHT: int = 720
     NOTE_IMAGE_QUALITY: int = 75  # JPEG quality 1–100
 
-    # Phase 3 — cheap AI; full doc = chunk→stitch. Dev: keep NOTE_AI_MAX_CHUNKS=1.
+    # Phase 3 — AI understand. Base = USER ≈ TESTER (real-world); overrides for DEV/ADMIN.
     NOTE_AI_PROVIDER: str = "openai"
     # False = upload only stores PDF; process when creating a practice paper (Phase 4)
     NOTE_AUTO_PROCESS: bool = False
@@ -47,9 +47,8 @@ class Settings(BaseSettings):
     NOTE_AI_MAX_INPUT_CHARS: int = 12000
     NOTE_AI_MAX_OUTPUT_TOKENS: int = 2500
     NOTE_AI_CHUNK_OVERLAP: int = 200
-    # Dev default 1 = first chunk only (cheap). Raise (e.g. 20) for full-document.
-    # USER uses base; ADMIN/DEV/TESTER use tier overrides via limits_for().
-    NOTE_AI_MAX_CHUNKS: int = 1
+    # USER base matches TESTER; raise via account_type for DEV/ADMIN only.
+    NOTE_AI_MAX_CHUNKS: int = 20
     NOTE_AI_MAX_CHUNKS_ADMIN: int = 200
     NOTE_AI_MAX_CHUNKS_DEV: int = 50
     NOTE_AI_MAX_CHUNKS_TESTER: int = 20
@@ -67,7 +66,7 @@ class Settings(BaseSettings):
     OCR_MAX_PAGES_DEV: int = 500
     OCR_MAX_PAGES_TESTER: int = 500
 
-    # Phase 4 — paper generation (keep small while developing)
+    # Phase 4 — paper generation. USER = student product; TESTER slightly higher for QA.
     PAPER_MONTHLY_CREATE_LIMIT: int = 4
     PAPER_MONTHLY_CREATE_LIMIT_ADMIN: int = 10000
     PAPER_MONTHLY_CREATE_LIMIT_DEV: int = 100
@@ -79,11 +78,15 @@ class Settings(BaseSettings):
     PAPER_MAX_PAGES_TESTER: int = 500
     PAPER_SIZE_RATIO: float = 0.3
     PAPER_MIN_QUESTIONS: int = 5
-    PAPER_MAX_QUESTIONS: int = 15
+    # Safety ceiling only — paper length is primarily max(MIN, floor(available * RATIO)).
+    # Keep this high so a large pool is not clipped early (old default of 15 was too low).
+    PAPER_MAX_QUESTIONS: int = 100
+    # Soft cooldown preference only (not a hard ban). Prefer questions not used on the
+    # last N papers / within D days; fall back to least-asked if the fresh pool is small.
     PAPER_COOLDOWN_DAYS: int = 14
     PAPER_COOLDOWN_GENERATIONS: int = 2
-    # How many unique concepts to ask the model to generate per create (spread across MCQ chunks)
-    PAPER_GENERATE_UNIQUE_TARGET: int = 12
+    # Concepts requested per create (spread across MCQ chunks). Pool size drives the 30% paper length.
+    PAPER_GENERATE_UNIQUE_TARGET: int = 40
     PAPER_GENERATE_VARIANTS_PER_CONCEPT: int = 2
     # Cap OpenAI MCQ calls when topic canonical is long (same chunk size as NOTE_AI_MAX_INPUT_CHARS).
     PAPER_MCQ_MAX_CHUNKS: int = 20

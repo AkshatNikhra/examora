@@ -1,4 +1,8 @@
-"""Resolve per-account processing / paper limits from Settings + account_type."""
+"""Resolve per-account processing / paper limits from Settings + account_type.
+
+Tier ladder (base env = USER):
+  USER ≈ TESTER (real-world student) < DEV < ADMIN
+"""
 
 from __future__ import annotations
 

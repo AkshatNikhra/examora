@@ -443,6 +443,22 @@
   "topicsSelectNone": "Select at least one topic",
   "@topicsSelectNone": {
     "description": "Snack when no topics selected"
+  },
+  "paperQuotaRemaining": "{remaining} of {limit} tests left this month",
+  "@paperQuotaRemaining": {
+    "description": "Remaining monthly paper creates under create CTA",
+    "placeholders": {
+      "remaining": {"type": "int"},
+      "limit": {"type": "int"}
+    }
+  },
+  "paperQuotaExhausted": "No tests left this month. Resets next month.",
+  "@paperQuotaExhausted": {
+    "description": "Shown when monthly create quota is used up"
+  },
+  "homeStatTestsLeft": "Tests Left",
+  "@homeStatTestsLeft": {
+    "description": "Home stats card label for remaining creates"
   }
 }
 

@@ -120,6 +120,31 @@ class HomeActivity {
   }
 }
 
+class PaperQuota {
+  PaperQuota({
+    required this.used,
+    required this.limit,
+    required this.remaining,
+    required this.resetsAt,
+  });
+
+  final int used;
+  final int limit;
+  final int remaining;
+  final DateTime resetsAt;
+
+  bool get isExhausted => remaining <= 0;
+
+  factory PaperQuota.fromJson(Map<String, dynamic> json) {
+    return PaperQuota(
+      used: json['used'] as int? ?? 0,
+      limit: json['limit'] as int? ?? 0,
+      remaining: json['remaining'] as int? ?? 0,
+      resetsAt: DateTime.parse(json['resets_at'] as String),
+    );
+  }
+}
+
 class HomeSummary {
   HomeSummary({
     this.fullName,
@@ -128,6 +153,7 @@ class HomeSummary {
     this.avgScorePercent,
     this.exams = const [],
     this.recentActivity = const [],
+    this.paperQuota,
   });
 
   final String? fullName;
@@ -136,8 +162,10 @@ class HomeSummary {
   final int? avgScorePercent;
   final List<HomeExamCard> exams;
   final List<HomeActivity> recentActivity;
+  final PaperQuota? paperQuota;
 
   factory HomeSummary.fromJson(Map<String, dynamic> json) {
+    final rawQuota = json['paper_quota'];
     return HomeSummary(
       fullName: json['full_name'] as String?,
       examsCount: json['exams_count'] as int? ?? 0,
@@ -151,6 +179,9 @@ class HomeSummary {
           .whereType<Map<String, dynamic>>()
           .map(HomeActivity.fromJson)
           .toList(),
+      paperQuota: rawQuota is Map<String, dynamic>
+          ? PaperQuota.fromJson(rawQuota)
+          : null,
     );
   }
 }
@@ -322,4 +353,8 @@ final meRepositoryProvider = Provider<MeRepository>((ref) {
 
 final meProfileProvider = FutureProvider.autoDispose<UserProfile>((ref) {
   return ref.watch(meRepositoryProvider).fetchMe();
+});
+
+final homeSummaryProvider = FutureProvider.autoDispose<HomeSummary>((ref) {
+  return ref.watch(meRepositoryProvider).fetchHomeSummary();
 });

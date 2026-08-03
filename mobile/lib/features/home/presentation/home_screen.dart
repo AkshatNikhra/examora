@@ -9,10 +9,6 @@ import '../../../core/errors/app_failure.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../repositories/me_repository.dart';
 
-final homeSummaryProvider = FutureProvider.autoDispose<HomeSummary>((ref) {
-  return ref.watch(meRepositoryProvider).fetchHomeSummary();
-});
-
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -146,7 +142,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           label: 'Tests Taken',
                         ),
                       ),
-                      const SizedBox(width: 10),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
                       Expanded(
                         child: _StatCard(
                           icon: Icons.auto_awesome,
@@ -155,6 +155,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ? '—'
                               : '${summary.avgScorePercent}%',
                           label: 'Avg Score',
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _StatCard(
+                          icon: Icons.bolt_outlined,
+                          value: summary.paperQuota == null
+                              ? '—'
+                              : '${summary.paperQuota!.remaining}/${summary.paperQuota!.limit}',
+                          label: 'Tests Left',
                         ),
                       ),
                     ],
